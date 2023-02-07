@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="19529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19519"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="LTSettingHeaderViewTableViewCell" rowHeight="45" id="bFs-ZI-azo" customClass="LTSettingHeaderViewTableViewCell" customModule="Luft" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="bFs-ZI-azo" id="Dur-8o-TuK">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="11a-Qw-Xn3" customClass="LTCellHeaderView" customModule="Luft" customModuleProvider="target">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="uRt-Dh-Gob">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="upV-F5-dTZ">
+                                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1Br-0J-S9q" customClass="LTCellHeaderTitleLabel" customModule="Luft" customModuleProvider="target">
+                                                <rect key="frame" x="16" y="0.0" width="304" height="44"/>
+                                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstAttribute="bottom" secondItem="1Br-0J-S9q" secondAttribute="bottom" id="TNA-YA-IEL"/>
+                                            <constraint firstItem="1Br-0J-S9q" firstAttribute="leading" secondItem="upV-F5-dTZ" secondAttribute="leading" constant="16" id="cff-IB-cJb"/>
+                                            <constraint firstItem="1Br-0J-S9q" firstAttribute="top" secondItem="upV-F5-dTZ" secondAttribute="top" id="hIt-ma-u9M"/>
+                                            <constraint firstAttribute="trailing" secondItem="1Br-0J-S9q" secondAttribute="trailing" id="zYe-wy-3Gi"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="56X-JA-0gn" customClass="LTCellHeaderBorderLabel" customModule="Luft" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="43" width="320" height="1"/>
+                                <color key="backgroundColor" red="0.078431372550000003" green="0.80784313730000001" blue="0.38823529410000002" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="sic-T4-B5O"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tfY-ra-1cy" customClass="LTCellHeaderBorderLabel" customModule="Luft" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="1" width="320" height="1"/>
+                                <color key="backgroundColor" red="0.078431372550000003" green="0.80784313730000001" blue="0.38823529410000002" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="D2h-4b-V4G"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.078431372550000003" green="0.80784313730000001" blue="0.38823529410000002" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="bottom" secondItem="56X-JA-0gn" secondAttribute="bottom" id="3xC-JS-3GD"/>
+                            <constraint firstAttribute="trailing" secondItem="uRt-Dh-Gob" secondAttribute="trailing" id="B2o-m9-BOt"/>
+                            <constraint firstItem="uRt-Dh-Gob" firstAttribute="leading" secondItem="11a-Qw-Xn3" secondAttribute="leading" id="L9d-72-dqB"/>
+                            <constraint firstItem="tfY-ra-1cy" firstAttribute="leading" secondItem="56X-JA-0gn" secondAttribute="leading" id="buP-gc-3HF"/>
+                            <constraint firstItem="56X-JA-0gn" firstAttribute="leading" secondItem="11a-Qw-Xn3" secondAttribute="leading" id="bzS-BR-6IB"/>
+                            <constraint firstAttribute="bottom" secondItem="uRt-Dh-Gob" secondAttribute="bottom" id="p9Q-qq-DNj"/>
+                            <constraint firstItem="56X-JA-0gn" firstAttribute="top" secondItem="tfY-ra-1cy" secondAttribute="bottom" constant="41" id="pYk-Nw-VqI"/>
+                            <constraint firstAttribute="trailing" secondItem="56X-JA-0gn" secondAttribute="trailing" id="rJF-Fc-1YN"/>
+                            <constraint firstItem="tfY-ra-1cy" firstAttribute="trailing" secondItem="56X-JA-0gn" secondAttribute="trailing" id="wOw-cW-EUg"/>
+                            <constraint firstItem="uRt-Dh-Gob" firstAttribute="top" secondItem="11a-Qw-Xn3" secondAttribute="top" id="y64-qX-XYA"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                <constraints>
+                    <constraint firstAttribute="bottom" secondItem="11a-Qw-Xn3" secondAttribute="bottom" id="1tK-8d-WBF"/>
+                    <constraint firstAttribute="trailing" secondItem="11a-Qw-Xn3" secondAttribute="trailing" id="9Yk-6w-c1t"/>
+                    <constraint firstItem="11a-Qw-Xn3" firstAttribute="leading" secondItem="Dur-8o-TuK" secondAttribute="leading" id="EG9-Dd-5Eb"/>
+                    <constraint firstItem="11a-Qw-Xn3" firstAttribute="top" secondItem="Dur-8o-TuK" secondAttribute="top" id="b4E-bO-YkC"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="Vf1-aM-wOg"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <connections>
+                <outlet property="cellHeaderBackView" destination="11a-Qw-Xn3" id="jEQ-1c-Eke"/>
+                <outlet property="lblHeaderTilte" destination="1Br-0J-S9q" id="rMa-8J-h2P"/>
+            </connections>
+            <point key="canvasLocation" x="139" y="77"/>
+        </tableViewCell>
+    </objects>
+</document>

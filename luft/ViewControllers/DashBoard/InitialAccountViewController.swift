@@ -1,0 +1,512 @@
+//
+//  InitialAccountViewController.swift
+//  Luft
+//
+//  Created by iMac Augusta on 3/9/20.
+//  Copyright © 2020 iMac. All rights reserved.
+//
+
+import UIKit
+import SwiftyJSON
+import CoreData
+import Realm
+import RealmSwift
+
+
+class InitialAccountViewController:  LTViewController, LTIntialAGREEDelegate {
+    func selectedIntialAGREE() {
+        print("ios")
+    }
+    
+    @IBOutlet weak var tblSetting: UITableView!
+    @IBOutlet weak var headerView: AppHeaderView!
+    @IBOutlet weak var lblHeader: LTHeaderTitleLabel!
+    @IBOutlet weak var lblUAT: UILabel!
+    @IBOutlet weak var btnSaveSetting: UIButton!
+    @IBOutlet weak var btnBackSetting: UIButton!
+    @IBOutlet weak var Getmorehel: UIButton!
+
+    @IBOutlet weak var imgViewYes: UIImageView!
+    @IBOutlet weak var imgViewNo: UIImageView!
+    @IBOutlet weak var imgViewDontNo: UIImageView!
+    
+    @IBOutlet weak var btnYesSetting: UIButton!
+    @IBOutlet weak var btnNoSetting: UIButton!
+    @IBOutlet weak var btnDontNoSetting: UIButton!
+    
+    @IBOutlet weak var imgViewActive: UIImageView!
+    @IBOutlet weak var imgViewPassive: UIImageView!
+    @IBOutlet weak var imgViewUnknow: UIImageView!
+    
+    @IBOutlet weak var btnYesActive: UIButton!
+    @IBOutlet weak var btnNoPassive: UIButton!
+    @IBOutlet weak var btnDontNoUnknow: UIButton!
+    
+    @IBOutlet weak var stackViewOptionMitigation: UIStackView!
+    @IBOutlet weak var stackViewSelectionMitigation: UIStackView!
+    
+    @IBOutlet weak var viewOptionMitigation: UIView!
+    @IBOutlet weak var viewSelectionMitigation: UIView!
+    @IBOutlet weak var lblBottomBorder: UILabel!
+    
+    var mitigationOption:Int = 0
+    var arrSectionTilte: [String] = ["ACCOUNT"]
+    var arrAccountSetting: [SettingData] = []
+    
+    //API'S data
+    var tempMobileUserSetting: AppUserMobileDetails? = nil
+    var selectedType:SelectedFieldType? = .SelectedNone
+    var pollutantType:PollutantType? = .PollutantNone
+    var isUpadteTempPassword:Bool = false
+    
+    //New API CALL
+    var appUserSettingData: AppUser? = nil
+    var saveMobileUserSetting: AppUserMobileDetails? = nil
+    var arrMyDeviceList: [MyDeviceModel]? = []
+    var isFromInitialAddDevice:Bool = false
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.tblSetting?.delegate = self
+        self.tblSetting?.dataSource = self
+        self.tblSetting.register(UINib(nibName: cellIdentity.settingCellIdentifier, bundle: nil), forCellReuseIdentifier: cellIdentity.settingCellIdentifier)
+        self.tblSetting.register(UINib(nibName: cellIdentity.settingHeaderCellIdentifier, bundle: nil), forCellReuseIdentifier: cellIdentity.settingHeaderCellIdentifier)
+        self.view?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        self.btnSaveSetting.addTarget(self, action: #selector(self.btnSaveSettingTapped(sender:)), for: .touchUpInside)
+        self.btnBackSetting.addTarget(self, action: #selector(self.btnBackSettingTapped(sender:)), for: .touchUpInside)
+        self.view.backgroundColor = ThemeManager.currentTheme().settingViewBackgroundColor
+        self.btnSaveSetting.isHidden = false
+        self.loadArrayData()
+        self.uatLBLTheme(lbl: self.lblUAT)
+        self.setLatestStatusBar()
+        self.selectedMitigationSetting()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    @IBAction func Getmorehelp(_ sender: Any) {
+        self.moveToWebView()
+        
+    }
+    
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return ThemeManager.currentTheme().statusBarTextColor
+    }
+    
+    @objc func btnSaveSettingTapped(sender: UIButton) {
+        
+        if self.tempMobileUserSetting?.buildingtypeid == nil || self.tempMobileUserSetting?.buildingtypeid == -1 || self.tempMobileUserSetting?.buildingtypeid == 999 {
+            Helper.shared.showSnackBarAlert(message: INTIAL_CONTENT_BUILDING_TYPE, type: .Failure)
+        }
+        else if self.mitigationOption == 0 {
+            Helper.shared.showSnackBarAlert(message: INTIAL_CONTENT_MITIGATION_SYSTEM, type: .Failure)
+        }
+        else if self.mitigationOption == 1 {
+            if self.tempMobileUserSetting?.mitigationsystemtypeid == nil {
+                 Helper.shared.showSnackBarAlert(message: INTIAL_CONTENT_MITIGATION_SYSTEM, type: .Failure)
+            }else {
+                self.callSaveUserMeApi()
+            }
+        }
+        else if self.mitigationOption == 2 {
+            self.tempMobileUserSetting?.mitigationsystemtypeid = 0
+            self.callSaveUserMeApi()
+        }
+        else if self.mitigationOption == 3 {
+                self.tempMobileUserSetting?.mitigationsystemtypeid = 3
+                self.callSaveUserMeApi()
+        }
+        else {
+            self.callSaveUserMeApi()
+        }
+        
+    }
+    
+    
+    @objc func btnBackSettingTapped(sender: UIButton) {
+        self.navigationController?.popToRootViewController(animated: false)
+    }
+    
+    @objc func btnOptionSettingTapped(sender: UIButton) {
+        self.imgViewYes.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewNo.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewDontNo.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        if sender.tag == 101 {
+            self.imgViewYes.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+            self.stackViewSelectionMitigation?.isHidden = false
+            self.lblBottomBorder.isHidden = false
+            self.mitigationOption = 1
+        }
+        if sender.tag == 102 {
+            self.imgViewNo.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+            self.stackViewSelectionMitigation?.isHidden = true
+            self.lblBottomBorder.isHidden = true
+            self.mitigationOption = 2
+        }
+        if sender.tag == 103 {
+            self.imgViewDontNo.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+            self.stackViewSelectionMitigation?.isHidden = true
+            self.lblBottomBorder.isHidden = true
+            self.mitigationOption = 3
+        }
+    }
+    
+    @objc func btnMitigatioSettingTapped(sender: UIButton) {
+        self.imgViewActive.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewPassive.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewUnknow.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        if sender.tag == 201 {
+            self.tempMobileUserSetting?.mitigationsystemtypeid = 1
+            self.imgViewActive.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+        if sender.tag == 202 {
+            self.tempMobileUserSetting?.mitigationsystemtypeid = 2
+            self.imgViewPassive.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+        if sender.tag == 203 {
+            self.tempMobileUserSetting?.mitigationsystemtypeid = 3
+            self.imgViewUnknow.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+    }
+    
+    func moveToWebView() {
+        let webdataView = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "WebDataViewController2") as! webdata2ViewController
+        webdataView.Urltodisplay = ACCOUNT_URL
+        webdataView.isFromIntial = true
+        webdataView.lblHeader?.text = ACCOUNT
+        webdataView.strTitle = ACCOUNT
+        webdataView.delegateIntailAgree = self
+        webdataView.modalPresentationStyle = .pageSheet
+        self.present(webdataView, animated: false, completion: nil)
+    }
+        
+    func selectedMitigationSetting()  {
+        
+        self.viewOptionMitigation.backgroundColor = UIColor.clear
+        self.viewSelectionMitigation.backgroundColor = UIColor.clear
+        
+        self.imgViewYes.isHidden = false
+        self.imgViewNo.isHidden = false
+        self.imgViewDontNo.isHidden = false
+        self.imgViewYes.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewNo.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewDontNo.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        
+        self.btnYesSetting.tag = 101
+        self.btnNoSetting.tag = 102
+        self.btnDontNoSetting.tag = 103
+        self.btnYesSetting.addTarget(self, action: #selector(self.btnOptionSettingTapped(sender:)), for: .touchUpInside)
+        self.btnNoSetting.addTarget(self, action: #selector(self.btnOptionSettingTapped(sender:)), for: .touchUpInside)
+        self.btnDontNoSetting.addTarget(self, action: #selector(self.btnOptionSettingTapped(sender:)), for: .touchUpInside)
+        
+        self.imgViewActive.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewPassive.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.imgViewUnknow.image = ThemeManager.currentTheme().cellNONCheckMarkIconImage
+        self.btnYesActive.tag = 201
+        self.btnNoPassive.tag = 202
+        self.btnDontNoUnknow.tag = 203
+        self.btnYesActive.addTarget(self, action: #selector(self.btnMitigatioSettingTapped(sender:)), for: .touchUpInside)
+        self.btnNoPassive.addTarget(self, action: #selector(self.btnMitigatioSettingTapped(sender:)), for: .touchUpInside)
+        self.btnDontNoUnknow.addTarget(self, action: #selector(self.btnMitigatioSettingTapped(sender:)), for: .touchUpInside)
+        if self.tempMobileUserSetting?.mitigationsystemtypeid == 1 {
+            self.imgViewActive.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+        if self.tempMobileUserSetting?.mitigationsystemtypeid == 2 {
+            self.imgViewPassive.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+        if self.tempMobileUserSetting?.mitigationsystemtypeid == 3 {
+            self.imgViewUnknow.image = ThemeManager.currentTheme().cellCheckMarkIconImage
+        }
+        self.stackViewSelectionMitigation?.isHidden = true
+        self.lblBottomBorder.isHidden = true
+    }
+    
+    func uatLBLTheme(lbl:UILabel)  {
+        lbl.textColor = ThemeManager.currentTheme().titleTextColor
+        lbl.font = UIFont.setAppFontBold(12)
+        if AppSession.shared.getUserLiveState() == 2 {
+            lbl.text = UAT_TEXT
+        }else {
+            lbl.text = ""
+        }
+        lbl.text = ""
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        self.tabBarController?.tabBar.isHidden = true
+    }
+    
+    
+    func loadArrayData() {
+        self.arrAccountSetting.removeAll()
+        self.hideActivityIndicator(self.view)
+        self.arrSectionTilte.removeAll()
+        self.arrSectionTilte.append("ACCOUNT")
+        // Account
+        self.arrAccountSetting.append(SettingData(title: "Please, select your Building Type:", subTitle: "", imageType: ""))
+        if AppSession.shared.getMobileUserMeData()?.buildingtypeid == nil || AppSession.shared.getMobileUserMeData()?.buildingtypeid == -1{
+            self.arrAccountSetting.append(SettingData(title: "Building Type", subTitle: "Select", imageType: "Disclosure"))
+            self.tempMobileUserSetting?.buildingtypeid = 999
+        }else {
+            self.arrAccountSetting.append(SettingData(title: "Building Type", subTitle: self.readBuildingTypeData(idBuildType: AppSession.shared.getMobileUserMeData()?.buildingtypeid ?? 0), imageType: "Disclosure"))
+        }
+        self.tblSetting?.reloadData()
+        ThemeManager.applyTheme(theme: ThemeManager.currentTheme())
+        self.applyViewTheme()
+    }
+    
+    func applyViewTheme()  {
+        self.headerView.backgroundColor = ThemeManager.currentTheme().headerViewBGColor
+        self.lblHeader.textColor = ThemeManager.currentTheme().headerTitleTextColor
+        self.setLatestStatusBar()
+        self.setNeedsStatusBarAppearanceUpdate()
+        self.tabBarController?.tabBar.barTintColor = ThemeManager.currentTheme().viewBackgroundColor
+        let tabHome = self.tabBarController?.tabBar.items![0]
+        tabHome?.image = ThemeManager.currentTheme().luftDashBoardIconImage.withRenderingMode(.alwaysOriginal)
+        let tabFoll = self.tabBarController?.tabBar.items![1]
+        tabFoll?.image = ThemeManager.currentTheme().luftDashBoardChartIconImage.withRenderingMode(.alwaysOriginal)
+        let tabMsg = self.tabBarController?.tabBar.items![2]
+        tabMsg?.image = ThemeManager.currentTheme().luftDashBoardSettingIconImage.withRenderingMode(.alwaysOriginal)
+        self.tabBarController?.tabBar.isHidden = true
+        self.view.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        self.tblSetting.backgroundColor = UIColor.clear
+        self.tabBarController?.tabBar.layer.addBorder(edge: .top, color: ThemeManager.currentTheme().ltCellHeaderTabbarBorderColor, thickness: 1.0)
+        self.tblSetting?.reloadData()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        self.isUpadteTempPassword = false
+    }
+    
+}
+// MARK: - Save API Data's
+extension InitialAccountViewController: LTDropDownMitigationBuildingType{
+    
+    func selectedHomeBuildType(id:Int,idvalue:String){
+        if self.selectedType == .SelectedBuildingType {
+            self.arrAccountSetting[1].subTitle =  self.readBuildingTypeData(idBuildType: id)
+            self.tempMobileUserSetting?.buildingtypeid = id
+            self.tblSetting?.reloadData()
+            //self.callSaveUserMeApi()
+        }
+        
+    }
+    
+    func callSaveUserMeApi() {
+        
+        if Reachability.isConnectedToNetwork() == true {
+        
+            self.showActivityIndicator(self.view)
+            SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getDefaultHeaderDetails()
+            AppUserAPI.apiAppUserUpdateMobileUserPost(user: self.tempMobileUserSetting, completion: { (error) in
+                self.hideActivityIndicator(self.view)
+                if error == nil {
+                    let saveMobileUserSetting = AppUserMobileDetails.init(firstName: AppSession.shared.getMobileUserMeData()?.firstName ?? "", lastName: AppSession.shared.getMobileUserMeData()?.lastName ?? "", buildingtypeid: self.tempMobileUserSetting?.buildingtypeid, mitigationsystemtypeid: self.tempMobileUserSetting?.mitigationsystemtypeid, enableNotifications: self.tempMobileUserSetting?.enableNotifications, isTextNotificationEnabled: self.tempMobileUserSetting?.isTextNotificationEnabled, mobileNo: self.tempMobileUserSetting?.mobileNo, isEmailNotificationEnabled: self.tempMobileUserSetting?.isEmailNotificationEnabled, notificationEmail: self.tempMobileUserSetting?.notificationEmail, isMobileNotificationFrequencyEnabled: self.tempMobileUserSetting?.isMobileNotificationFrequencyEnabled, isSummaryEmailEnabled: self.tempMobileUserSetting?.isSummaryEmailEnabled, isDailySummaryEmailEnabled: self.tempMobileUserSetting?.isDailySummaryEmailEnabled, isWeeklySummaryEmailEnabled: self.tempMobileUserSetting?.isWeeklySummaryEmailEnabled, isMonthlySummaryEmailEnabled: self.tempMobileUserSetting?.isMonthlySummaryEmailEnabled, temperatureUnitTypeId: self.tempMobileUserSetting?.temperatureUnitTypeId, pressureUnitTypeId: self.tempMobileUserSetting?.pressureUnitTypeId, radonUnitTypeId: self.tempMobileUserSetting?.radonUnitTypeId, appLayout: self.tempMobileUserSetting?.appLayout, appTheme: self.tempMobileUserSetting?.appTheme, outageNotificationsDuration: self.tempMobileUserSetting?.outageNotificationsDuration, notificationFrequency: self.tempMobileUserSetting?.notificationFrequency, isMobileOutageNotificationsEnabled: self.tempMobileUserSetting?.isMobileOutageNotificationsEnabled)
+                    AppSession.shared.setMobileUserMeData(mobileSettingData: saveMobileUserSetting)
+                    AppSession.shared.setUserSelectedTheme(themeType: self.tempMobileUserSetting?.appTheme ?? 0)
+                    AppSession.shared.setUserSelectedLayout(layOut: self.tempMobileUserSetting?.appLayout ?? 0)
+                    
+                    self.moveToUnits()
+                    Helper().showSnackBarAlert(message:"Details Updated Successfully", type: .Success)
+                }else {
+                    self.loadArrayData()
+                    Helper().showSnackBarAlert(message: "Something went wrong while retrieving information. Please try again later.", type: .Failure)
+                    UIApplication.shared.endIgnoringInteractionEvents()
+                }
+            })
+        }else {
+            self.loadArrayData()
+            Helper.shared.showSnackBarAlert(message: NETWORK_CONNECTION, type: .Failure)
+        }
+    }
+}
+
+extension InitialAccountViewController  {
+    
+    func medataAPIData(meData: AppUserMobileDetails?) {
+        
+        if let meDatass = meData {
+            self.tempMobileUserSetting = AppUserMobileDetails.init(firstName: meDatass.firstName, lastName: meDatass.lastName, buildingtypeid: meDatass.buildingtypeid, mitigationsystemtypeid: meDatass.mitigationsystemtypeid, enableNotifications: meDatass.enableNotifications, isTextNotificationEnabled: meDatass.isTextNotificationEnabled, mobileNo: meDatass.mobileNo, isEmailNotificationEnabled: meDatass.isEmailNotificationEnabled, notificationEmail: meDatass.notificationEmail, isMobileNotificationFrequencyEnabled: meDatass.isMobileNotificationFrequencyEnabled, isSummaryEmailEnabled: meDatass.isSummaryEmailEnabled, isDailySummaryEmailEnabled: meDatass.isDailySummaryEmailEnabled, isWeeklySummaryEmailEnabled: meDatass.isWeeklySummaryEmailEnabled, isMonthlySummaryEmailEnabled: meDatass.isMonthlySummaryEmailEnabled, temperatureUnitTypeId: meDatass.temperatureUnitTypeId, pressureUnitTypeId: meDatass.pressureUnitTypeId, radonUnitTypeId: meDatass.radonUnitTypeId, appLayout: meDatass.appLayout, appTheme: meDatass.appTheme, outageNotificationsDuration: meDatass.outageNotificationsDuration, notificationFrequency: meDatass.notificationFrequency, isMobileOutageNotificationsEnabled: meDatass.isMobileOutageNotificationsEnabled)
+            
+            AppSession.shared.setUserSelectedTheme(themeType: meDatass.appTheme ?? 0)
+            AppSession.shared.setUserSelectedLayout(layOut: meDatass.appLayout ?? 0)
+        }
+        self.loadArrayData()
+    }
+}
+
+// MARK: - Table View Data's
+extension InitialAccountViewController:UITableViewDelegate,UITableViewDataSource {
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return self.arrSectionTilte.count
+    }
+    
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentity.settingHeaderCellIdentifier) as! LTSettingHeaderViewTableViewCell
+        switch section {
+        case 0:
+            cell.lblHeaderTilte.text = self.arrSectionTilte[section]
+            cell.cellHeaderBackView.backgroundColor = ThemeManager.currentTheme().ltCellHeaderViewBackgroudColor
+        default:
+            cell.lblHeaderTilte.text = ""
+            cell.cellHeaderBackView.backgroundColor = ThemeManager.currentTheme().clearColor
+        }
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 45
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0.1
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 45
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        switch section {
+        case 0:
+            return self.arrAccountSetting.count
+        default:
+            return 0
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        switch indexPath.row {
+        case 0:
+            let cell:LTSettingListTableViewCell = self.tblSetting.dequeueReusableCell(withIdentifier: cellIdentity.settingCellIdentifier, for: indexPath) as! LTSettingListTableViewCell
+            return self.infoCellSetting(cellValue: cell, index: indexPath)
+        case 1:
+            let cell:LTSettingListTableViewCell = self.tblSetting.dequeueReusableCell(withIdentifier: cellIdentity.settingCellIdentifier, for: indexPath) as! LTSettingListTableViewCell
+            return self.accountCellSetting(cellValue: cell, index: indexPath)
+        default:
+            return UITableViewCell()
+        }
+        
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        switch indexPath.row {
+        case 0:
+            break
+        case 1:
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+                self.showDropDownView(appDropDownType: AppDropDownType.DropDownHomeBuildingType)
+                self.selectedType = .SelectedBuildingType
+            }
+        default:
+            break
+        }
+    }
+}
+
+extension InitialAccountViewController {
+    
+    func accountCellSetting(cellValue:LTSettingListTableViewCell,index:IndexPath) -> LTSettingListTableViewCell {
+        cellValue.lblTitleCell.text = self.arrAccountSetting[index.row].title
+        cellValue.lblSubTitleCell.text = self.arrAccountSetting[index.row].subTitle
+        
+        cellValue.lblTitleCell.textColor = ThemeManager.currentTheme().ltCellTitleColor
+        cellValue.lblSubTitleCell.textColor = ThemeManager.currentTheme().ltCellSubtitleColor
+        
+        cellValue.lblTitleView.isHidden = false
+        cellValue.lblSubTitleView.isHidden = false
+        cellValue.lblTitleCell.textAlignment = .left
+        cellValue.lblSubTitleCell.textAlignment = .right
+        cellValue.imgViewDisclosureCell.image = ThemeManager.currentTheme().cellDisclousreIconImage
+        cellValue.selectionStyle = .none
+        cellValue.cellBackView.backgroundColor = ThemeManager.currentTheme().ltCellViewBackgroudColor
+        cellValue.lblTitleView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.lblSubTitleView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.cellImageView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.lblSubTitleCell.textColor = ThemeManager.currentTheme().ltCellSubtitleColor
+        cellValue.lblCellBorder.backgroundColor = ThemeManager.currentTheme().ltCellBorderColor
+        cellValue.lblCellBorder.isHidden = true
+        return cellValue
+    }
+    
+    func infoCellSetting(cellValue:LTSettingListTableViewCell,index:IndexPath) -> LTSettingListTableViewCell {
+        cellValue.lblTitleCell.text = self.arrAccountSetting[index.row].title
+        cellValue.lblTitleCell.font = UIFont.setAppFontMedium(14)
+        cellValue.lblSubTitleCell.text = ""
+        cellValue.lblTitleCell.textColor = ThemeManager.currentTheme().ltCellTitleColor
+        cellValue.lblSubTitleCell.textColor = ThemeManager.currentTheme().ltCellSubtitleColor
+        cellValue.lblTitleView.isHidden = false
+        cellValue.lblSubTitleView.isHidden = true
+        cellValue.lblTitleCell.textAlignment = .left
+        cellValue.lblSubTitleCell.textAlignment = .right
+        cellValue.imgViewDisclosureCell.image = nil
+        cellValue.selectionStyle = .none
+        cellValue.cellBackView.backgroundColor = ThemeManager.currentTheme().ltCellViewBackgroudColor
+        cellValue.lblTitleView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.lblSubTitleView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.cellImageView.backgroundColor = ThemeManager.currentTheme().clearColor
+        cellValue.lblSubTitleCell.textColor = ThemeManager.currentTheme().ltCellSubtitleColor
+        cellValue.lblCellBorder.backgroundColor = ThemeManager.currentTheme().ltCellBorderColor
+        cellValue.lblCellBorder.isHidden = true
+        return cellValue
+    }
+    
+    
+}
+
+extension InitialAccountViewController {
+    
+    func moveToUnits() {
+        let unitsView = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "UnitsViewController") as! UnitsViewController
+        unitsView.isFromInitialAddDevice = self.isFromInitialAddDevice
+        self.navigationController?.pushViewController(unitsView, animated: true)
+    }
+    
+    func showDropDownView(appDropDownType:AppDropDownType) {
+        let dropDownVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "LTDropDownViewController") as! LTDropDownViewController
+        dropDownVC.dropDownType = appDropDownType
+        dropDownVC.dropDownBuildingMititgationDelegate = self
+        self.present(dropDownVC, animated: false, completion: nil)
+    }
+}
+
+extension InitialAccountViewController {
+    
+    func callUserMeApi(){
+        if Reachability.isConnectedToNetwork() == true {
+            self.showActivityIndicator(self.view)
+            SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getDefaultHeaderDetails()
+            AppUserAPI.apiAppUserMeGet { (response, error) in
+                if error == nil {
+                    if let responseValue = response {
+                        self.appUserSettingData = response
+                        self.saveMobileUserSetting = AppUserMobileDetails.init(firstName: self.appUserSettingData?.firstName, lastName: self.appUserSettingData?.lastName, buildingtypeid: self.appUserSettingData?.buildingtypeid, mitigationsystemtypeid: self.appUserSettingData?.mitigationsystemtypeid, enableNotifications: self.appUserSettingData?.enableNotifications, isTextNotificationEnabled: self.appUserSettingData?.isTextNotificationEnabled, mobileNo: self.appUserSettingData?.mobileNo, isEmailNotificationEnabled: self.appUserSettingData?.isEmailNotificationEnabled, notificationEmail: self.appUserSettingData?.notificationEmail, isMobileNotificationFrequencyEnabled: self.appUserSettingData?.isMobileNotificationFrequencyEnabled, isSummaryEmailEnabled: self.appUserSettingData?.isSummaryEmailEnabled, isDailySummaryEmailEnabled: self.appUserSettingData?.isDailySummaryEmailEnabled, isWeeklySummaryEmailEnabled: self.appUserSettingData?.isWeeklySummaryEmailEnabled, isMonthlySummaryEmailEnabled: self.appUserSettingData?.isMonthlySummaryEmailEnabled, temperatureUnitTypeId: self.appUserSettingData?.temperatureUnitTypeId, pressureUnitTypeId: self.appUserSettingData?.pressureUnitTypeId, radonUnitTypeId: self.appUserSettingData?.radonUnitTypeId, appLayout: self.appUserSettingData?.appLayout, appTheme: self.appUserSettingData?.appTheme, outageNotificationsDuration: self.appUserSettingData?.outageNotificationsDuration, notificationFrequency: self.appUserSettingData?.notificationFrequency, isMobileOutageNotificationsEnabled:self.appUserSettingData?.isMobileOutageNotificationsEnabled)
+                        //Save User default data's
+                        AppSession.shared.setMEAPIData(userSettingData: responseValue)
+                        AppSession.shared.setMobileUserMeData(mobileSettingData: self.saveMobileUserSetting!)
+                        self.medataAPIData(meData: self.saveMobileUserSetting!)
+                        self.loadArrayData()
+                    }
+                }else {
+                    self.hideActivityIndicator(self.view)
+                    self.medataAPIData(meData: self.saveMobileUserSetting ?? nil)
+                    Helper().showSnackBarAlert(message: "Something went wrong while retrieving information. Please try again later.", type: .Failure)
+                    self.loadArrayData()
+                }
+            }
+        }
+        else{
+            self.hideActivityIndicator(self.view)
+            self.medataAPIData(meData: self.saveMobileUserSetting ?? nil)
+            Helper.shared.showSnackBarAlert(message: NETWORK_CONNECTION, type: .Failure)
+        }
+    }
+}
+
+

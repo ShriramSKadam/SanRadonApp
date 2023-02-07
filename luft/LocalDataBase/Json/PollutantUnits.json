@@ -1,0 +1,5 @@
+{
+"PollutantUnits": [
+{ "type": "Feature", "properties": { "AirPressure": "Hg", "Temperature": "Fahrenheit", "Radon": "Bqm3", "UserID": "naveen4@yopmail.com" }, "geometry": null }
+]
+}

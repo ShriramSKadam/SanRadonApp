@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="InfoCollectionViewCell" id="gTV-IL-0wX" customClass="InfoCollectionViewCell" customModule="Luft" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="285" height="465"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="285" height="465"/>
+                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dsZ-6e-mDp">
+                        <rect key="frame" x="0.0" y="0.0" width="285" height="465"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="backLuftLogo" translatesAutoresizingMaskIntoConstraints="NO" id="UTs-UF-Fdp">
+                                <rect key="frame" x="0.0" y="0.0" width="285" height="465"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LuftLogo" translatesAutoresizingMaskIntoConstraints="NO" id="HQ5-h7-7IW">
+                                <rect key="frame" x="42.666666666666657" y="10" width="200" height="100"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="200" id="ZVz-eT-dJB"/>
+                                    <constraint firstAttribute="height" constant="100" id="vha-3i-Vmv"/>
+                                </constraints>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LuftLogo" translatesAutoresizingMaskIntoConstraints="NO" id="x29-A0-k9p">
+                                <rect key="frame" x="67.666666666666686" y="102.66666666666669" width="150" height="100"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="150" id="k3o-w1-TTQ"/>
+                                    <constraint firstAttribute="height" constant="100" id="qO3-Cj-vyh"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="obv-oT-d1w" customClass="LTInfoSettingHeaderLabel" customModule="Luft" customModuleProvider="target">
+                                <rect key="frame" x="10" y="222" width="265" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="amU-5U-f0b" customClass="LTInfoSettingHintLabel" customModule="Luft" customModuleProvider="target">
+                                <rect key="frame" x="10" y="248" width="265" height="12"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="UdN-o0-Wdj" customClass="LTCommonButton" customModule="Luft" customModuleProvider="target">
+                                <rect key="frame" x="20" y="280" width="245" height="45"/>
+                                <color key="backgroundColor" red="0.21960784310000001" green="0.41960784309999999" blue="0.90588235289999997" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="45" id="rlf-4f-My1"/>
+                                </constraints>
+                                <state key="normal" title="Done">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="UdN-o0-Wdj" firstAttribute="leading" secondItem="dsZ-6e-mDp" secondAttribute="leading" constant="20" id="7Kh-z1-6Rr"/>
+                            <constraint firstItem="UdN-o0-Wdj" firstAttribute="top" secondItem="amU-5U-f0b" secondAttribute="bottom" constant="20" id="9KD-0b-IYF"/>
+                            <constraint firstItem="HQ5-h7-7IW" firstAttribute="top" secondItem="dsZ-6e-mDp" secondAttribute="top" constant="10" id="CUz-sN-Y3L"/>
+                            <constraint firstAttribute="trailing" secondItem="amU-5U-f0b" secondAttribute="trailing" constant="10" id="EO5-ib-Hzs"/>
+                            <constraint firstItem="obv-oT-d1w" firstAttribute="leading" secondItem="dsZ-6e-mDp" secondAttribute="leading" constant="10" id="GNt-9z-oAI"/>
+                            <constraint firstItem="x29-A0-k9p" firstAttribute="centerX" secondItem="dsZ-6e-mDp" secondAttribute="centerX" id="Mnq-mG-nJQ"/>
+                            <constraint firstItem="UTs-UF-Fdp" firstAttribute="leading" secondItem="dsZ-6e-mDp" secondAttribute="leading" id="R2F-6w-fTA"/>
+                            <constraint firstAttribute="trailing" secondItem="UdN-o0-Wdj" secondAttribute="trailing" constant="20" id="TP1-Yf-sUa"/>
+                            <constraint firstItem="amU-5U-f0b" firstAttribute="leading" secondItem="dsZ-6e-mDp" secondAttribute="leading" constant="10" id="V4A-ko-WRq"/>
+                            <constraint firstAttribute="trailing" secondItem="obv-oT-d1w" secondAttribute="trailing" constant="10" id="XOm-mK-Wt1"/>
+                            <constraint firstItem="obv-oT-d1w" firstAttribute="centerY" secondItem="dsZ-6e-mDp" secondAttribute="centerY" id="bMC-D4-j0G"/>
+                            <constraint firstAttribute="trailing" secondItem="UTs-UF-Fdp" secondAttribute="trailing" id="cSA-YO-gzf"/>
+                            <constraint firstItem="UTs-UF-Fdp" firstAttribute="top" secondItem="dsZ-6e-mDp" secondAttribute="top" id="eVH-sY-JsE"/>
+                            <constraint firstItem="amU-5U-f0b" firstAttribute="top" secondItem="obv-oT-d1w" secondAttribute="bottom" constant="5" id="gOO-54-Jp7"/>
+                            <constraint firstItem="HQ5-h7-7IW" firstAttribute="centerX" secondItem="dsZ-6e-mDp" secondAttribute="centerX" id="gnL-oa-tPZ"/>
+                            <constraint firstAttribute="bottom" secondItem="UTs-UF-Fdp" secondAttribute="bottom" id="v7I-3N-2hp"/>
+                            <constraint firstItem="x29-A0-k9p" firstAttribute="centerY" secondItem="dsZ-6e-mDp" secondAttribute="centerY" constant="-80" id="zI1-rl-NSS"/>
+                        </constraints>
+                    </view>
+                </subviews>
+            </view>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="dsZ-6e-mDp" secondAttribute="trailing" id="9jJ-eg-g8X"/>
+                <constraint firstItem="dsZ-6e-mDp" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="EGk-dl-ly7"/>
+                <constraint firstItem="dsZ-6e-mDp" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="Ezx-X7-f1o"/>
+                <constraint firstItem="dsZ-6e-mDp" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="Gn1-hu-hXk"/>
+                <constraint firstAttribute="bottom" secondItem="dsZ-6e-mDp" secondAttribute="bottom" id="iYY-Ac-j4O"/>
+                <constraint firstAttribute="bottom" secondItem="dsZ-6e-mDp" secondAttribute="bottom" id="w4J-2h-iSQ"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
+            <size key="customSize" width="285" height="465"/>
+            <connections>
+                <outlet property="btnDone" destination="UdN-o0-Wdj" id="KAX-ld-2gF"/>
+                <outlet property="imgViewBacKLogo" destination="UTs-UF-Fdp" id="nrD-X8-Utp"/>
+                <outlet property="imgViewCenter" destination="x29-A0-k9p" id="By7-ns-ipk"/>
+                <outlet property="lblInfoCellSubTitle" destination="amU-5U-f0b" id="ges-Gn-PDK"/>
+                <outlet property="lblInfoCellTitle" destination="obv-oT-d1w" id="CWV-im-yD0"/>
+            </connections>
+            <point key="canvasLocation" x="306.52173913043481" y="236.82065217391306"/>
+        </collectionViewCell>
+    </objects>
+    <resources>
+        <image name="LuftLogo" width="128" height="128"/>
+        <image name="backLuftLogo" width="375" height="667"/>
+    </resources>
+</document>

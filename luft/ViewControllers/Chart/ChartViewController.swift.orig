@@ -1,0 +1,1757 @@
+//
+//  ChartViewController.swift
+//  luft
+//
+//  Created by iMac Augusta on 9/23/19.
+//  Copyright © 2019 iMac. All rights reserved.
+//
+
+import UIKit
+import Charts
+import CoreData
+import Realm
+import RealmSwift
+import CoreBluetooth
+
+struct LineChartModel {
+    var QuickSync: Int = 0
+    var Device_ID: Int = 0
+    var LogIndex: Int = 0
+    var Temperature: Float = 0
+    var CO2: Float = 0
+    var Radon: Float = 0
+    var AirPressure: Float = 0
+    var VOC: Float = 0
+    var date: Date = Date(timeIntervalSince1970: 1)
+    var Humidity: Float = 0
+    var dateTimeStamp: Int = 0
+    var onlyDate: String = ""
+    var WeekValue: String = ""
+    var dummyValue: Int = 0
+    
+}
+
+enum FilterTypeEnum: Int {
+    case Overall = 1
+    case Hours24 = 2
+    case Days7 = 3
+    case Month = 4
+    case Year = 5
+    case Unknown = 6
+
+}
+enum DataTypeFilterEnum: Int {
+    case radon = 101
+    case voc = 102
+    case co2 = 103
+    case temperature = 104
+    case humidity = 105
+    case airPressure = 106
+}
+
+enum DataTypeFilterTitle: String {
+    case radon = "Radon"
+    case voc = "VOC"
+    case co2 = "ECO2"
+    case temperature = "Temperature"
+    case humidity = "Humidity"
+    case airPressure = "AirPressure"
+}
+
+struct AverageValues{
+    var radonAverage: Float
+    var vocAverage: Float
+    var co2Average: Float
+    var humidityAverage: Float
+    var airPressureAverage: Float
+    var temperatureAverage: Float
+}
+
+var GlobalDeviceID = 0
+
+class ChartViewController: DemoBaseViewController {
+    // Chart Integration
+    var chartDataValues:[LineChartModel] = []
+    var chartMinimumVal: Double = 0.0
+    var chartMaximumVal: Double = 0.0
+
+    
+    @IBOutlet weak var lineChartView: LineChartView!
+    @IBOutlet weak var btnRadon: UIButton!
+    @IBOutlet weak var btnVoc: UIButton!
+    @IBOutlet weak var btnCo2: UIButton!
+    @IBOutlet weak var btnTemperature: UIButton!
+    @IBOutlet weak var btnHumidity: UIButton!
+    @IBOutlet weak var btnAirPressure: UIButton!
+    
+    @IBOutlet weak var lblConnectedDevice: UILabel!
+    
+    @IBOutlet weak var btn24Hrs: UIButton!
+    @IBOutlet weak var btn7Days: UIButton!
+    @IBOutlet weak var btnMonths: UIButton!
+    @IBOutlet weak var btnYear: UIButton!
+
+    @IBOutlet weak var btnSelectedDevice: ViewBorderButton!
+    
+    var chartLimitLineValue1: Double = 10.0
+    var chartLimitLineValue2: Double = 50.0
+    var strConnectDeviceName: String = ""
+    var chartValues: [Int] = []
+    var context: NSManagedObjectContext!
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var filterTypeVal = FilterTypeEnum.Month
+    var selectedDeviceID = "659"
+    var typeVal = DataTypeFilterEnum.radon
+    
+    // device list
+    
+     var arrReadDeviceData:[RealmDeviceList] = []
+    @IBOutlet weak var tblDeviceCollection: UITableView!
+    var isSelectedDeviceRow:Int = 0
+    var luftSelectedDeviceID:Int = 0
+    var isCurrentSlectedDevice:RealmDeviceList? = nil
+    var isGridList:Bool = true
+    var strConnectPeripheral: String = "LUFT"
+    var centralManager: CBCentralManager!
+    var mainPeripheral: CBPeripheral!
+    var isLoadMe:Bool = false
+    @IBOutlet weak var lblSelectedConnectDevice: UILabel!
+    @IBOutlet weak var deviceListTableViewHeightConstraint: NSLayoutConstraint!
+    
+    @IBOutlet weak var lastSyncLabel: UILabel!
+    var arrCurrentIndexValue:[RealmPollutantValuesTBL] = []
+
+    @IBOutlet weak var averageDataLabel: UILabel!
+    var averageValues: AverageValues?
+    
+    var colorRadonType:ColorType = .ColorNone
+    var colorTempType:ColorType = .ColorNone
+    var colorHumidityType:ColorType = .ColorNone
+    var colorAirpressureType:ColorType = .ColorNone
+    var colorVocType:ColorType = .ColorNone
+    var colorEco2Type:ColorType = .ColorNone
+    
+    var isMenuPressed:Int = 0
+    var writeRemoveWifiIndex:Int = 0
+    var strShareEmailID: String = ""
+    var strRenameDevice: String = ""
+     @IBOutlet weak var btnMenu: UIButton!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+        
+        self.tblDeviceCollection.delegate = self
+        self.tblDeviceCollection.dataSource = self
+        self.tblDeviceCollection.register(UINib(nibName: cellIdentity.luftDeviceTableViewCell, bundle: nil), forCellReuseIdentifier: cellIdentity.luftDeviceTableViewCell)
+        
+        seteCO2Text(color: .black)
+    }
+    
+    func seteCO2Text(color: UIColor) {
+        let numberString = NSMutableAttributedString(string: "eCO", attributes: [.font: UIFont.setSystemFontMedium(17), .foregroundColor: color])
+        numberString.append(NSAttributedString(string: "2", attributes: [.font: UIFont.setSystemFontMedium(14), .baselineOffset: -2, .foregroundColor: color]))
+        btnCo2.setAttributedTitle(numberString, for: .normal)
+    }
+    
+    override func updateChartData() {
+        if self.shouldHideData {
+            lineChartView.data = nil
+            return
+        }
+        self.setDataCountSets()
+        
+    }
+   
+    override func viewWillAppear(_ animated: Bool) {
+//        self.context = appDelegate.persistentContainer.viewContext
+//        
+//        let count = RealmDataManager.shared.getDeviceDetails(deviceID: selectedDeviceID).count
+//        if count == 0{
+//            RealmDataManager.shared.populateRealMdataFromJson()
+//        }
+//
+        self.strShareEmailID = ""
+        self.strRenameDevice = ""
+        self.writeRemoveWifiIndex = 0
+        if isMenuPressed == 1{
+            self.isMenuPressed = 0
+            return
+        }
+        self.isMenuPressed = 0
+        self.btnMenu.setImage(ThemeManager.currentTheme().menuIconImage, for: .normal)
+        self.getDeviceList()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            
+            self.initialButtonsetups()
+            self.buttonDataTypeReset()
+            
+            self.btnHoursDayYearReset()
+            self.btnFilterTypeEnabled(btn: self.btn24Hrs)
+            
+            self.btnHourDaysYearButtonsTapped(sender: self.btn24Hrs)
+            self.btnDataTypeTapped(sender: self.btnRadon)
+            
+        }
+        
+        if AppSession.shared.getUserSelectedLayout() == 2{
+            self.isGridList = true
+        }else {
+            self.isGridList = false
+        }
+////        if self.strConnectDeviceName == ""{
+////            self.lblConnectedDevice?.text = "LUFT"
+////            self.btnSelectedDevice.setTitle("No device", for: .normal)
+////            self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: "#E34444")
+////            self.btnSelectedDevice.alpha = 0.5
+////        }else {
+////            self.lblConnectedDevice?.text = self.strConnectDeviceName
+////            self.btnSelectedDevice.setTitle(self.strConnectDeviceName, for: .normal)
+////            self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: "#E0BF38")
+////            self.btnSelectedDevice.alpha = 1.0
+////            self.btnRadon.backgroundColor = UIColor.init(hexString: "#F0F3F5")
+////            self.readChartDataFromDB(type: 101)
+////        }
+//        self.lblConnectedDevice?.text = self.strConnectDeviceName
+//        self.btnSelectedDevice.setTitle(self.strConnectDeviceName, for: .normal)
+//        self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: "#E0BF38")
+//        self.btnSelectedDevice.alpha = 1.0
+//        
+////        self.readChartDataFromDB()
+    }
+}
+
+final class myCustomLabel: IAxisValueFormatter {
+    
+    func stringForValue(_ value: Double, axis: AxisBase?) -> String {
+        return String(format: "%@ %@", value.string(maximumFractionDigits: 1), balloonMarkerData.unitString)
+    }
+}
+
+// UIButton UI and Methods
+extension ChartViewController{
+    func initialButtonsetups(){
+        self.btn24Hrs.layer.borderColor = UIColor.gray.cgColor
+        self.btn24Hrs.layer.cornerRadius = 16.5
+        self.btn7Days.layer.borderColor = UIColor.gray.cgColor
+        self.btn7Days.layer.cornerRadius = 16.5
+        self.btnMonths.layer.borderColor = UIColor.gray.cgColor
+        self.btnMonths.layer.cornerRadius = 16.5
+        self.btnYear.layer.borderColor = UIColor.gray.cgColor
+        self.btnYear.layer.cornerRadius = 16.5
+
+    }
+    @IBAction func btnHourDaysYearButtonsTapped(sender: UIButton) {
+        self.btnHoursDayYearReset()
+//        lineChartView.marker = nil
+        lineChartView.highlightValue(nil, callDelegate: false)
+        
+
+        if sender.tag == 2001{
+            self.btnFilterTypeEnabled(btn: self.btn24Hrs)
+            self.filterTypeVal = FilterTypeEnum.Hours24
+            balloonMarkerData.dateFormat = "h:mm a"
+        }
+        else if sender.tag == 2002{
+            self.btnFilterTypeEnabled(btn: self.btn7Days)
+            self.filterTypeVal = FilterTypeEnum.Days7
+            balloonMarkerData.dateFormat = "E, h a"
+        }
+        else if sender.tag == 2003{
+            self.btnFilterTypeEnabled(btn: self.btnMonths)
+            self.filterTypeVal = FilterTypeEnum.Month
+            balloonMarkerData.dateFormat = "MMM d"
+            
+        }
+        else if sender.tag == 2004{
+            self.btnFilterTypeEnabled(btn: self.btnYear)
+            self.filterTypeVal = FilterTypeEnum.Year
+            balloonMarkerData.dateFormat = "MMM d, yyyy"
+        }
+        self.readChartDataFromDB()
+    }
+    @IBAction func btnDataTypeTapped(sender: UIButton) {
+        self.buttonDataTypeReset()
+        lineChartView.highlightValue(nil, callDelegate: false)
+        if sender.tag == 1001{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnRadon)
+            self.typeVal = DataTypeFilterEnum.radon
+            
+            let temp = AppSession.shared.getMobileUserMeData()
+            
+            if temp?.radonUnitTypeId == 2{
+                balloonMarkerData.unitString = "pCi/l"
+                balloonMarkerData.numberPrecision = 1
+            }
+            else if temp?.radonUnitTypeId == 1{
+                balloonMarkerData.unitString = "Bqm3"
+                balloonMarkerData.numberPrecision = 0
+            }
+            
+        }
+        else if sender.tag == 1002{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnVoc)
+            self.typeVal = DataTypeFilterEnum.voc
+            balloonMarkerData.unitString = "ppb"
+            balloonMarkerData.numberPrecision = 0
+        }
+        else if sender.tag == 1003{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnCo2)
+            self.typeVal = DataTypeFilterEnum.co2
+            balloonMarkerData.unitString = "ppm"
+             balloonMarkerData.numberPrecision = 0
+            
+        }
+        else if sender.tag == 1004{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnTemperature)
+            self.typeVal = DataTypeFilterEnum.temperature
+            let temp = AppSession.shared.getMobileUserMeData()
+            
+            if temp?.temperatureUnitTypeId == 1{
+                balloonMarkerData.unitString = "F"
+            }
+            else{
+                balloonMarkerData.unitString = "C"
+            }
+             balloonMarkerData.numberPrecision = 0
+        }
+        else if sender.tag == 1005{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnHumidity)
+            self.typeVal = DataTypeFilterEnum.humidity
+            balloonMarkerData.unitString = "%"
+            balloonMarkerData.numberPrecision = 0
+        }
+        else if sender.tag == 1006{
+            self.btnDataTypeFilterTypeEnabled(btn: self.btnAirPressure)
+            self.typeVal = DataTypeFilterEnum.airPressure
+            
+            let temp = AppSession.shared.getMobileUserMeData()
+            
+            if temp?.pressureUnitTypeId == 2{
+                balloonMarkerData.unitString = "inHg"
+                balloonMarkerData.numberPrecision = 2
+            }
+            else if temp?.pressureUnitTypeId == 1{
+                balloonMarkerData.unitString = "mBar"
+                balloonMarkerData.numberPrecision = 1
+            }
+        }
+        
+        self.readChartDataFromDB()
+    }
+    func btnHoursDayYearReset(){
+        self.btn24Hrs.layer.borderColor = UIColor.gray.cgColor
+        self.btn24Hrs.backgroundColor = UIColor.white
+        self.btn24Hrs.titleLabel?.textColor = UIColor.black
+        
+        self.btn7Days.layer.borderColor = UIColor.gray.cgColor
+        self.btn7Days.backgroundColor = UIColor.white
+        self.btn7Days.titleLabel?.textColor = UIColor.black
+        
+        self.btnMonths.layer.borderColor = UIColor.gray.cgColor
+        self.btnMonths.backgroundColor = UIColor.white
+        self.btnMonths.titleLabel?.textColor = UIColor.black
+        
+        self.btnYear.layer.borderColor = UIColor.gray.cgColor
+        self.btnYear.backgroundColor = UIColor.white
+        self.btnYear.titleLabel?.textColor = UIColor.black
+        
+    }
+    func btnFilterTypeEnabled(btn:UIButton){
+        btn.layer.borderColor = UIColor.init(hexString: "#007AFF").cgColor
+        btn.backgroundColor = UIColor.init(hexString: "#007AFF")
+        btn.titleLabel?.textColor = UIColor.white
+    }
+    
+    func buttonDataTypeReset()  {
+        self.btnRadon.backgroundColor = UIColor.white
+        self.btnVoc.backgroundColor = UIColor.white
+        self.btnCo2.backgroundColor = UIColor.white
+        self.btnTemperature.backgroundColor = UIColor.white
+        self.btnHumidity.backgroundColor = UIColor.white
+        self.btnAirPressure.backgroundColor = UIColor.white
+    }
+    func btnDataTypeFilterTypeEnabled(btn:UIButton){
+        btn.backgroundColor = UIColor.init(hexString: "#F0F3F5")
+    }
+}
+
+extension ChartViewController {
+    
+    func readChartDataFromDB() {
+        self.chartDataValues.removeAll()
+        var newListVal : [RealmPollutantValuesTBL]? = nil
+        
+        var result:(array: [RealmPollutantValuesTBL], average: AverageValues)?
+        if filterTypeVal == .Hours24{
+            
+            result = RealmDataManager.shared.getRealMPollutantValues24HoursFiltered(deviceID: selectedDeviceID, endDate: Date())
+
+        }else if filterTypeVal == .Overall{
+            result = RealmDataManager.shared.getRealMPollutantValues1YearFiltered(deviceID: selectedDeviceID, endDate: Date())
+
+        }
+        else if filterTypeVal == .Days7{
+            result = RealmDataManager.shared.getRealMPollutantValues7DaysFiltered(deviceID: selectedDeviceID, endDate: Date())
+
+        }
+        else if filterTypeVal == .Month{
+            result = RealmDataManager.shared.getRealMPollutantValues1MonthFiltered(deviceID: selectedDeviceID, endDate: Date())
+
+        }
+        else if filterTypeVal == .Year{
+            result = RealmDataManager.shared.getRealMPollutantValues1YearFiltered(deviceID: selectedDeviceID, endDate: Date())
+
+        }
+        
+        newListVal = result?.array ?? []
+        
+        averageValues = result?.average
+        
+        self.updateButtonColorsBasedOnAverage()
+        
+        if let newList = newListVal{
+            for item in newList{
+                if item.dummyValue != -1000{
+                    let tempUserData  = AppSession.shared.getMobileUserMeData()
+                    var airPressure = item.AirPressure
+                    var temperature = item.Temperature
+                    var radon = item.Radon
+                    if tempUserData?.pressureUnitTypeId == 1{
+//                        airPressure = item.AirPressure *  3.38639 // inHg to mBar
+                        airPressure = Float(Helper.shared.convertAirPressureINHGToMBAR(value: item.AirPressure))
+                    }
+                    
+                    if tempUserData?.temperatureUnitTypeId == 2{
+//                        temperature = (item.Temperature - 32) / 1.8 // f to celsius
+                        temperature = Helper.shared.convertTemperatureFahrenheitToCelsius(value: item.Temperature)
+                    }
+                    
+                    if tempUserData?.radonUnitTypeId == 1{
+                        
+                        radon = Helper.shared.convertRadonPCILToBQM3(value: item.Radon)
+                    }
+                    
+                    
+                    chartDataValues.append(LineChartModel(QuickSync: 0, Device_ID: item.Device_ID, LogIndex: item.LogIndex, Temperature: temperature, CO2: item.CO2, Radon: radon, AirPressure: airPressure, VOC: item.VOC, date: item.date, Humidity: item.Humidity, dateTimeStamp: Int(item.date.toMillis()), onlyDate: item.onlyDate, WeekValue: item.WeekValue, dummyValue: item.dummyValue))
+                }
+            }
+            
+            // unit convert average values
+             let tempUserData  = AppSession.shared.getMobileUserMeData()
+            
+            let airPressure = averageValues?.airPressureAverage
+            let temperature = averageValues?.temperatureAverage
+            let radon = averageValues?.radonAverage
+            if tempUserData?.pressureUnitTypeId == 1{
+                averageValues?.airPressureAverage = Float(Helper.shared.convertAirPressureINHGToMBAR(value: airPressure ?? 0.0))
+            }
+            
+            if tempUserData?.temperatureUnitTypeId == 2{
+                averageValues?.temperatureAverage = Helper.shared.convertTemperatureFahrenheitToCelsius(value: temperature ?? 0.0)
+            }
+            
+            if tempUserData?.radonUnitTypeId == 1{
+                averageValues?.radonAverage = Helper.shared.convertRadonPCILToBQM3(value: radon ?? 0.0)
+            }
+            
+            switch typeVal {
+            case DataTypeFilterEnum.radon:
+                let minVal = chartDataValues.min { $0.Radon < $1.Radon }
+                self.chartMinimumVal = (Double(minVal?.Radon ?? 0.0)) // * 0.9
+                let maxVal = chartDataValues.max { $0.Radon < $1.Radon }
+                self.chartMaximumVal = (Double(maxVal?.Radon ?? 0.0)) //* 1.5
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.radonAverage ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            case  DataTypeFilterEnum.voc:
+                let minVal = chartDataValues.min { $0.VOC < $1.VOC }
+                self.chartMinimumVal = (Double(minVal?.VOC ?? 0.0))
+                let maxVal = chartDataValues.max { $0.VOC < $1.VOC }
+                self.chartMaximumVal = (Double(maxVal?.VOC ?? 0.0))
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.vocAverage ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            case  DataTypeFilterEnum.co2:
+                let minVal = chartDataValues.min { $0.CO2 < $1.CO2 }
+                self.chartMinimumVal = (Double(minVal?.CO2 ?? 0.0))
+                let maxVal = chartDataValues.max { $0.CO2 < $1.CO2 }
+                self.chartMaximumVal = (Double(maxVal?.CO2 ?? 0.0))
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.co2Average ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            case  DataTypeFilterEnum.temperature:
+                let minVal = chartDataValues.min { $0.Temperature < $1.Temperature }
+                self.chartMinimumVal = (Double(minVal?.Temperature ?? 0.0))
+                let maxVal = chartDataValues.max { $0.Temperature < $1.Temperature }
+                self.chartMaximumVal = (Double(maxVal?.Temperature ?? 0.0))
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.temperatureAverage ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            case  DataTypeFilterEnum.humidity:
+                let minVal = chartDataValues.min { $0.Humidity < $1.Humidity }
+                self.chartMinimumVal = (Double(minVal?.Humidity ?? 0.0))
+                let maxVal = chartDataValues.max { $0.Humidity < $1.Humidity }
+                self.chartMaximumVal = (Double(maxVal?.Humidity ?? 0.0))
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.humidityAverage ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            case  DataTypeFilterEnum.airPressure:
+                let minVal = chartDataValues.min { $0.AirPressure < $1.AirPressure }
+                self.chartMinimumVal = (Double(minVal?.AirPressure ?? 0.0))
+                let maxVal = chartDataValues.max { $0.AirPressure < $1.AirPressure }
+                self.chartMaximumVal = (Double(maxVal?.AirPressure ?? 0.0))
+                
+                let valueString: String = getStringBasedOnPrecision(value: averageValues?.airPressureAverage ?? 0.0)
+                averageDataLabel.text = String.init(format: "%@ %@", valueString, balloonMarkerData.unitString)
+                
+                break
+            default:
+                let minVal = chartDataValues.min { $0.Radon < $1.Radon }
+                self.chartMinimumVal = (Double(minVal?.Radon ?? 0.0))
+                let maxVal = chartDataValues.max { $0.Radon < $1.Radon }
+                self.chartMaximumVal = (Double(maxVal?.Radon ?? 0.0))
+                break
+            }
+            self.initializeChartDetails()
+        }
+        
+       
+        
+//        let minVal = newList.min { $0.Humidity < $1.Humidity }
+//        self.chartMinimumVal = (Double(minVal?.Humidity ?? 0.0) * 0.9)
+//        let maxVal = newList.max { $0.Humidity < $1.Humidity }
+//        self.chartMaximumVal = (Double(maxVal?.Humidity ?? 0.0) * 1.5)
+//        debugPrint("minVal \(self.chartMinimumVal)")
+//        debugPrint("maxVal \(self.chartMaximumVal)")
+
+//        switch type {
+//        case 101:
+//            self.strType = "radon"
+//        case 102:
+//            self.strType = "voc"
+//        case 103:
+//            self.strType = "eco2"
+//        case 104:
+//            self.strType = "temperature"
+//        case 105:
+//            self.strType = "humidity"
+//        case 106:
+//            self.strType = "airpressure"
+//        default:
+//            print("DB")
+//        }
+//
+//
+//        let data = RealmDataManager.shared.getRealMPollutantValues24HoursFiltered(deviceID: "370", endDate: Date(timeIntervalSince1970: 1572892200000 / 1000.0))
+//        for item in data{
+//            debugPrint("Date \(item.date)")
+//            debugPrint("Humidity \(item.Humidity)")
+//        }
+//
+//
+//        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "DeviceData")
+//
+//        let predicate = NSPredicate(format: "devicename = %@", self.strConnectDeviceName)
+//        request.predicate = predicate
+//
+//        request.returnsObjectsAsFaults = false
+//        do {
+//
+//            var chartValues1: [Int] = []
+//            let result = try context.fetch(request)
+//            for data in result as! [NSManagedObject] {
+//                let dataValue:Int? = Int(data.value(forKey: self.strType) as? String ?? "0")
+//                chartValues1.append(dataValue ?? 0)
+//            }
+//
+//
+//            self.chartValues = Array(chartValues1.prefix(10))
+//            chartValues1.removeAll()
+//            if chartValues.count >= 10 {
+//                self.setChartValues(10)
+//                self.lineChartView.isHidden = false
+//            }else {
+//                self.lineChartView.isHidden = true
+//            }
+//
+//        } catch {
+//            print("Failed")
+//        }
+    }
+    
+    
+    func getStringBasedOnPrecision(value: Float)-> String{
+        switch balloonMarkerData.numberPrecision {
+        case 0:
+            return String.init(format: "%.0f", round(value))
+        case 1:
+            return String.init(format: "%.1f", value)
+            
+        case 2:
+            return String.init(format: "%.2f", value)
+            
+        default:
+            break
+        }
+        
+        return ""
+    }
+    
+    func updateButtonColorsBasedOnAverage(){
+        self.btnRadon.setTitleShadowColor(Helper.shared.getRadonColor(myValue: averageValues?.radonAverage ?? 0, deviceId: self.selectedDeviceID.toInt() ?? 0).color, for: .normal)
+        self.btnVoc.setTitleShadowColor( Helper.shared.getVOCColor(myValue: averageValues?.vocAverage ?? 0.0, deviceId: self.selectedDeviceID.toInt() ?? 0).color, for: .normal)
+        self.btnTemperature.setTitleShadowColor( Helper.shared.getTempeatureColor(myValue: averageValues?.temperatureAverage ?? 0, deviceId: self.selectedDeviceID.toInt() ?? 0).color, for: .normal)
+        self.btnHumidity.setTitleShadowColor( Helper.shared.getHumidityColor(myValue: averageValues?.humidityAverage ?? 0, deviceId: self.selectedDeviceID.toInt() ?? 0).color, for: .normal)
+        self.btnAirPressure.setTitleShadowColor(Helper.shared.getAirPressueColor(myValue: averageValues?.airPressureAverage ?? 0, deviceId: self.selectedDeviceID.toInt() ?? 0).color, for: .normal)
+        self.seteCO2Text(color: Helper.shared.getECO2Color(myValue: averageValues?.co2Average ?? 0, deviceId: self.selectedDeviceID.toInt() ?? 0).color)
+        
+        
+        self.colorRadonType = Helper.shared.getRadonColor(myValue: averageValues?.radonAverage ?? 0, deviceId: GlobalDeviceID).type
+        self.colorVocType = Helper.shared.getVOCColor(myValue: averageValues?.vocAverage ?? 0.0, deviceId: GlobalDeviceID).type
+        self.colorEco2Type = Helper.shared.getECO2Color(myValue: averageValues?.co2Average ?? 0, deviceId: GlobalDeviceID).type
+        self.colorTempType = Helper.shared.getTempeatureColor(myValue: averageValues?.temperatureAverage ?? 0, deviceId: GlobalDeviceID).type
+        self.colorAirpressureType = Helper.shared.getAirPressueColor(myValue: averageValues?.airPressureAverage ?? 0, deviceId: GlobalDeviceID).type
+        self.colorHumidityType = Helper.shared.getHumidityColor(myValue: averageValues?.humidityAverage ?? 0, deviceId: GlobalDeviceID).type
+        
+        if self.colorRadonType == ColorType.ColorAlert || self.colorVocType == ColorType.ColorAlert || self.colorEco2Type == ColorType.ColorAlert || self.colorTempType == ColorType.ColorAlert || self.colorAirpressureType == ColorType.ColorAlert || self.colorHumidityType == ColorType.ColorAlert {
+            self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: Helper.shared.getDeviceDataAlertColor(deviceID: GlobalDeviceID, colorType: .ColorAlert))
+            
+        }else if self.colorRadonType == ColorType.ColorWarning || self.colorVocType == ColorType.ColorWarning || self.colorEco2Type == ColorType.ColorWarning || self.colorTempType == ColorType.ColorWarning || self.colorAirpressureType == ColorType.ColorWarning || self.colorHumidityType == ColorType.ColorWarning {
+            self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: Helper.shared.getDeviceDataAlertColor(deviceID: GlobalDeviceID, colorType: .ColorWarning))
+        }else {
+            self.btnSelectedDevice.backgroundColor = UIColor.init(hexString: Helper.shared.getDeviceDataAlertColor(deviceID: GlobalDeviceID, colorType: .ColorOk))
+        }
+    }
+    
+
+    
+    func chartType(type:Int) {
+        switch type {
+        case 1:
+            break
+        default:
+            print("No data")
+        }
+    }
+}
+
+extension Double {
+    func string(maximumFractionDigits: Int = 2) -> String {
+        let s = String(format: "%.\(maximumFractionDigits)f", self)
+        var offset = -maximumFractionDigits - 1
+        for i in stride(from: 0, to: -maximumFractionDigits, by: -1) {
+            if s[s.index(s.endIndex, offsetBy: i - 1)] != "0" {
+                offset = i
+                break
+            }
+        }
+        return String(s[..<s.index(s.endIndex, offsetBy: offset)])
+    }
+}
+
+// MARK: - Extensions
+extension UIColor {
+    
+    convenience init(red: Int, green: Int, blue: Int) {
+        
+        assert(red >= 0 && red <= 255, "Invalid red component")
+        assert(green >= 0 && green <= 255, "Invalid green component")
+        assert(blue >= 0 && blue <= 255, "Invalid blue component")
+        
+        self.init(red: CGFloat(red) / 255.0, green: CGFloat(green) / 255.0, blue: CGFloat(blue) / 255.0, alpha: 1.0)
+    }
+    
+    convenience init(netHex:Int) {
+        
+        self.init(red:(netHex >> 16) & 0xff, green:(netHex >> 8) & 0xff, blue:netHex & 0xff)
+    }
+    
+    convenience init(hexString: String) {
+        let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt32()
+        Scanner(string: hex).scanHexInt32(&int)
+        let a, r, g, b: UInt32
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+    
+    public func UIColorFromHex(_ rgbValue:UInt32, alpha:Double=1.0)->UIColor {
+        let red = CGFloat((rgbValue & 0xFF0000) >> 16)/256.0
+        let green = CGFloat((rgbValue & 0xFF00) >> 8)/256.0
+        let blue = CGFloat(rgbValue & 0xFF)/256.0
+        return UIColor(red:red, green:green, blue:blue, alpha:CGFloat(alpha))
+    }
+}
+//MARK: Chart Data
+extension ChartViewController{
+    
+   
+    func luftMateFullDateFormat(dateStr:String) -> String
+    {
+        let dateFormatter = DateFormatter() //
+        dateFormatter.dateFormat = "yyyy/MM/dd HH:mm:ss" //Your date format
+        let date = dateFormatter.date(from: dateStr) //according to date format your date string
+        if date == nil {
+            dateFormatter.dateFormat = "yyyy/MM/dd HH:mm"
+            let date1 = dateFormatter.date(from: dateStr)
+            if date1 == nil{
+                return ""
+            }else {
+                dateFormatter.dateFormat = "HH"
+                let newDateString = dateFormatter.string(from: date1!)
+                
+                return newDateString
+            }
+        }
+        //Convert String to Date
+        dateFormatter.dateFormat = "HH"
+        let newDateString = dateFormatter.string(from: date!)
+        
+        return newDateString
+    }
+    func setChartValues(_ count : Int = 20) {
+        let values = (0..<count).map { (i) -> ChartDataEntry in
+            let val = Double(self.chartValues[i])
+            return ChartDataEntry(x: Double(i), y: val)
+        }
+        let dataSet =  LineChartDataSet(entries: values, label: "")
+        let data = LineChartData(dataSet: dataSet)
+        
+        dataSet.drawValuesEnabled = false
+        dataSet.lineWidth = 2
+        dataSet.colors = [UIColor.green]
+        dataSet.circleRadius = 5
+        dataSet.circleColors = [UIColor.green]
+        dataSet.drawCircleHoleEnabled = false
+        dataSet.fillColor = UIColor.green
+        dataSet.fillAlpha = 0.5
+        
+//        let leftAxis = self.lineChartView.leftAxis
+//        leftAxis.labelCount = self.chartValues.count
+//        leftAxis.valueFormatter = myCustomLabel()
+        self.lineChartView.rightAxis.enabled = false
+        
+        self.lineChartView.data = data
+        self.lineChartView.xAxis.enabled = false
+        
+        self.lineChartView.rightAxis.drawLabelsEnabled = false
+        self.lineChartView.rightAxis.drawAxisLineEnabled = false
+        self.lineChartView.legend.enabled = false
+        self.lineChartView.chartDescription?.text = ""
+        
+        self.lineChartView!.leftAxis.drawLabelsEnabled = true
+        self.lineChartView!.leftAxis.drawAxisLineEnabled = false
+        self.lineChartView.animate(xAxisDuration: 1.0, yAxisDuration: 1.0, easingOption: .linear)
+        dataSet.drawValuesEnabled = true
+        
+        self.setLimitLine(limitValue: self.chartLimitLineValue1, chartView: self.lineChartView, lineColor: UIColor.red)
+        self.setLimitLine(limitValue: self.chartLimitLineValue2, chartView: self.lineChartView, lineColor: UIColor.red)
+        self.lineChartView.backgroundColor = UIColor.init(hexString: "#F0F3F5")
+    }
+    
+    func setLimitLine(limitValue:Double,chartView:LineChartView,lineColor: UIColor)  {
+        let limit1 = ChartLimitLine(limit: limitValue, label: "")
+        limit1.lineColor = lineColor
+        limit1.lineDashLengths = [4.0, 2.0]
+        self.lineChartView.leftAxis.addLimitLine(limit1)
+    }
+    
+    func initializeChartDetails(){
+        self.options = [.toggleValues,
+                        .toggleFilled,
+                        .toggleCircles,
+                        .toggleCubic,
+                        .toggleHorizontalCubic,
+                        .toggleIcons,
+                        .toggleStepped,
+                        .toggleHighlight,
+                        .animateX,
+                        .animateY,
+                        .animateXY,
+                        .saveToGallery,
+                        .togglePinchZoom,
+                        .toggleAutoScaleMinMax,
+                        .toggleData]
+        
+        lineChartView.delegate = self
+        lineChartView.data = nil
+        lineChartView.chartDescription?.enabled = false
+        lineChartView.dragEnabled = true
+        lineChartView.setScaleEnabled(false)
+        lineChartView.pinchZoomEnabled = false
+        lineChartView.autoScaleMinMaxEnabled = false
+        
+        let deviceData = RealmDataManager.shared.getDeviceDetails(deviceID: selectedDeviceID)
+        var lav = 0.0
+        var hav = 0.0
+        var lwv = 0.0
+        var hwv = 0.0
+        var data: RealmThresHoldSetting?
+        switch self.typeVal {
+        case DataTypeFilterEnum.radon:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.radon.rawValue})
+            break
+        case DataTypeFilterEnum.voc:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.voc.rawValue})
+            break
+        case DataTypeFilterEnum.co2:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.co2.rawValue})
+            break
+        case DataTypeFilterEnum.temperature:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.temperature.rawValue})
+            break
+        case DataTypeFilterEnum.humidity:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.humidity.rawValue})
+            break
+        case DataTypeFilterEnum.airPressure:
+            data = (deviceData.first { $0.pollutant == DataTypeFilterTitle.airPressure.rawValue})
+            break
+        default:
+            print("DB")
+            break
+//            limit = Double(self.chartDataValues[index].Radon)
+            
+            break
+        }
+        
+        
+        lav = Double(data?.low_alert_value ?? "0") ?? 0.0
+        hav = Double(data?.high_alert_value ?? "0") ?? 0.0
+        lwv = Double(data?.low_waring_value ?? "0") ?? 0.0
+        hwv = Double(data?.high_waring_value ?? "0") ?? 0.0
+        
+        let tempUserData  = AppSession.shared.getMobileUserMeData()
+        switch self.typeVal {
+        case DataTypeFilterEnum.radon:
+            if tempUserData?.radonUnitTypeId == 1{
+                lav = Double(Helper.shared.convertRadonPCILToBQM3(value: Float(lav)))
+                hav = Double(Helper.shared.convertRadonPCILToBQM3(value: Float(hav)))
+                lwv = Double(Helper.shared.convertRadonPCILToBQM3(value: Float(lwv)))
+                hwv = Double(Helper.shared.convertRadonPCILToBQM3(value: Float(hwv)))
+            }
+            break
+        
+        case DataTypeFilterEnum.temperature:
+            if tempUserData?.temperatureUnitTypeId == 2{
+                lav = Double(Helper.shared.convertTemperatureFahrenheitToCelsius(value: Float(lav)))// f to celsius
+                hav =  Double(Helper.shared.convertTemperatureFahrenheitToCelsius(value: Float(hav)))
+                lwv = Double(Helper.shared.convertTemperatureFahrenheitToCelsius(value: Float(lwv)))
+                hwv =  Double(Helper.shared.convertTemperatureFahrenheitToCelsius(value: Float(hwv)))
+                
+            }
+            break
+      
+        case DataTypeFilterEnum.airPressure:
+            if tempUserData?.pressureUnitTypeId == 1{
+                lav = Helper.shared.convertAirPressureINHGToMBAR(value: Float(lav))
+                hav = Helper.shared.convertAirPressureINHGToMBAR(value: Float(hav))
+                lwv = Helper.shared.convertAirPressureINHGToMBAR(value: Float(lwv))
+                hwv = Helper.shared.convertAirPressureINHGToMBAR(value: Float(hwv))
+            }
+            break
+        default:
+            print("DB")
+            break
+            
+            
+        }
+        
+        var maxVal: Double
+        var minVal: Double
+        
+        if(hwv == 0 || hav == 0)
+        {
+            maxVal = max(lwv, lav)
+            minVal = min(lwv, lav)
+            
+        }
+        else{
+            
+            maxVal = max(lwv, lav, hwv, hav)
+            minVal = min(lwv, lav, hwv, hav)
+            
+            
+            
+//            if self.chartMinimumVal > lwv{
+//                self.chartMinimumVal = lwv
+//                if lav < lwv{
+//                    self.chartMinimumVal = lav
+//                }
+//
+//            }
+//
+//            if self.chartMaximumVal < hwv{
+//                self.chartMaximumVal = hwv
+//
+//                if hav > hwv{
+//                    self.chartMaximumVal = hav
+//                }
+//            }
+        }
+        
+        if(self.chartMinimumVal > minVal)
+        {
+            self.chartMinimumVal = minVal
+        }
+        if(self.chartMaximumVal < maxVal)
+        {
+            self.chartMaximumVal = maxVal
+        }
+        self.chartMinimumVal = chartMinimumVal * chartMinValMultiplier
+        self.chartMaximumVal = chartMaximumVal * chartMaxValMultiplier
+        
+        switch self.typeVal {
+        case DataTypeFilterEnum.radon:
+            self.chartMinimumVal = 0.0
+            break
+        case DataTypeFilterEnum.voc:
+            self.chartMinimumVal = 0.0
+            break
+        case DataTypeFilterEnum.co2:
+            self.chartMinimumVal = 0.0
+            break
+            
+        default:
+            break
+        }
+
+        
+        let colorWarningValue = RealmDataManager.shared.readColorDataValues(deviceID: self.isCurrentSlectedDevice?.device_id ?? 0, colorType: ColorType.ColorWarning.rawValue)
+        let colorAlertValue = RealmDataManager.shared.readColorDataValues(deviceID: self.isCurrentSlectedDevice?.device_id ?? 0, colorType: ColorType.ColorAlert.rawValue)
+        
+        let ll1 = ChartLimitLine(limit: lav, label: "")
+        ll1.lineWidth = 2
+        ll1.lineDashLengths = [2, 2]
+        ll1.lineColor = UIColor.init(hexString:  colorAlertValue[0].color_code)
+        ll1.valueFont = .systemFont(ofSize: 8)
+        
+        let ll2 = ChartLimitLine(limit: hav, label: "")
+        ll2.lineWidth = 2
+        ll2.lineDashLengths = [2,2]
+        ll2.lineColor =  UIColor.init(hexString:  colorAlertValue[0].color_code)
+        ll2.valueFont = .systemFont(ofSize: 8)
+        
+        let ll3 = ChartLimitLine(limit: lwv, label: "")
+        ll3.lineWidth = 2
+        ll3.lineDashLengths = [2, 2]
+        ll3.lineColor = UIColor.init(hexString:  colorWarningValue[0].color_code)
+        ll3.valueFont = .systemFont(ofSize: 8)
+        
+        let ll4 = ChartLimitLine(limit: hwv, label: "")
+        ll4.lineWidth = 2
+        ll4.lineDashLengths = [2,2]
+        ll4.lineColor = UIColor.init(hexString:  colorWarningValue[0].color_code)
+        ll4.valueFont = .systemFont(ofSize: 8)
+        
+        let leftAxis = lineChartView.leftAxis
+        leftAxis.removeAllLimitLines()
+        
+        if(lav != 0.0){
+            leftAxis.addLimitLine(ll1)
+        }
+
+        if(hav != 0.0){
+            leftAxis.addLimitLine(ll2)
+        }
+
+        if(lwv != 0.0){
+            leftAxis.addLimitLine(ll3)
+        }
+
+        if(hwv != 0.0){
+            leftAxis.addLimitLine(ll4)
+        }
+        
+        
+        leftAxis.axisMaximum = chartMaximumVal
+        leftAxis.axisMinimum = chartMinimumVal
+        
+        leftAxis.gridColor = UIColor.lightGray
+        leftAxis.gridLineDashLengths = [1, 1]
+        leftAxis.drawZeroLineEnabled = false
+        
+        lineChartView.xAxis.enabled = false
+        lineChartView.rightAxis.enabled = false
+        lineChartView.leftAxis.labelTextColor = UIColor.black
+        lineChartView.leftAxis.valueFormatter = myCustomLabel()
+        lineChartView.leftAxis.axisLineColor = UIColor.clear
+        
+        let marker = BalloonMarker(color: UIColor.init(netHex: 0x007AFF),
+                                   font: .systemFont(ofSize: 12),
+                                   textColor: .white,
+                                   insets: UIEdgeInsets(top: 8, left: 8, bottom: 20, right: 8))
+        marker.chartView = lineChartView
+        marker.minimumSize = CGSize(width: 80, height: 40)
+        lineChartView.marker = marker
+        
+        lineChartView.legend.form = .none
+        
+        self.updateChartData()
+        lineChartView.animate(xAxisDuration: 1.0)
+        
+    }
+    func luftDateFormat(dateStr:String) -> String
+    {
+        let dateFormatter = DateFormatter() //
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS" //Your date format
+        let date = dateFormatter.date(from: dateStr) //according to date format your date string
+        if date == nil {
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+            let date1 = dateFormatter.date(from: dateStr)
+            if date1 == nil{
+                return ""
+            }else {
+                dateFormatter.dateFormat = "MMM dd, yyyy"
+                let newDateString = dateFormatter.string(from: date1!)
+                
+                return newDateString
+            }
+        }
+        //Convert String to Date
+        dateFormatter.dateFormat = "MMM dd, yyyy"
+        let newDateString = dateFormatter.string(from: date!)
+        debugPrint("newDateString\(newDateString)")
+        return newDateString
+    }
+    func setDataCountSets() {
+        
+        
+        var yVals2 : [ChartDataEntry] = [ChartDataEntry]()
+        var dataSets : [LineChartDataSet] = [LineChartDataSet]()
+        chartDataValues = chartDataValues.sorted(by: { $0.LogIndex < $1.LogIndex })
+        for i in 0..<chartDataValues.count{
+            let xVal = Double(self.chartDataValues[i].LogIndex)//Double(i)
+            let dummVal = Double(self.chartDataValues[i].dummyValue)//Double(i)
+
+            var yVal:Double = 0.0
+            var data : LineChartModel?
+            if let index = self.chartDataValues.firstIndex(where: {$0.LogIndex == chartDataValues[i].LogIndex}) {
+                data = self.chartDataValues[index]
+                switch self.typeVal {
+                case DataTypeFilterEnum.radon:
+                    yVal = Double(self.chartDataValues[index].Radon)
+                    break
+                case  DataTypeFilterEnum.voc:
+                    yVal = Double(self.chartDataValues[index].VOC)
+                    break
+                case  DataTypeFilterEnum.co2:
+                    yVal = Double(self.chartDataValues[index].CO2)
+                    break
+                case  DataTypeFilterEnum.temperature:
+                    yVal = Double(self.chartDataValues[index].Temperature)
+                    break
+                case  DataTypeFilterEnum.humidity:
+                    yVal = Double(self.chartDataValues[index].Humidity)
+                    break
+                case  DataTypeFilterEnum.airPressure:
+                    yVal = Double(self.chartDataValues[index].AirPressure)
+                    break
+                default:
+                    print("DB")
+                    yVal = Double(self.chartDataValues[index].Radon)
+
+                    break
+                }
+            }
+            yVals2.append(ChartDataEntry(x: xVal, y: yVal, data:data))
+        }
+        dataSets.append(formDataSets(chartDataEntry: yVals2, firstLine: true))
+        
+        var logIndexArr : [Int] = []
+        for indexVal in self.chartDataValues{
+             logIndexArr.append(indexVal.LogIndex)
+        }
+        let grouped = logIndexArr.consecutivelyGrouped
+        debugPrint("grouped\(grouped)")
+        for groupedVal in grouped{
+            var tempEntry : [ChartDataEntry] = [ChartDataEntry]()
+            for i in 0..<groupedVal.count{
+                let xVal:Double = Double(groupedVal[i])
+                var yVal:Double = 0.0
+
+                if let index = self.chartDataValues.firstIndex(where: {$0.LogIndex == groupedVal[i]}) {
+                    switch self.typeVal {
+                    case  DataTypeFilterEnum.radon:
+                        yVal = Double(self.chartDataValues[index].Radon)
+                        break
+                    case  DataTypeFilterEnum.voc:
+                        yVal = Double(self.chartDataValues[index].VOC)
+                        break
+                    case  DataTypeFilterEnum.co2:
+                        yVal = Double(self.chartDataValues[index].CO2)
+                        break
+                    case  DataTypeFilterEnum.temperature:
+                        yVal = Double(self.chartDataValues[index].Temperature)
+                        break
+                    case  DataTypeFilterEnum.humidity:
+                        yVal = Double(self.chartDataValues[index].Humidity)
+                        break
+                    case  DataTypeFilterEnum.airPressure:
+                        yVal = Double(self.chartDataValues[index].AirPressure)
+                        break
+                    default:
+                        print("DB")
+                        yVal = Double(self.chartDataValues[index].Radon)
+
+                        break
+                    }
+                }
+                tempEntry.append(ChartDataEntry(x: xVal, y: yVal))
+            }
+            dataSets.append(formDataSets(chartDataEntry: tempEntry, firstLine: false))
+        }
+        let data = LineChartData(dataSets: dataSets)
+        lineChartView.data?.clearValues()
+        lineChartView.resetZoom()
+        lineChartView.data = data
+    }
+    func formDataSets(chartDataEntry:[ChartDataEntry], firstLine:Bool)->LineChartDataSet{
+        let set1 = LineChartDataSet(entries: chartDataEntry, label: "")
+        set1.drawIconsEnabled = false
+        set1.mode = .linear
+        set1.setColor(UIColor.init(netHex: 0x007AFF))
+        set1.setCircleColor(UIColor.init(netHex: 0x007AFF))
+        if firstLine == true{
+            set1.lineDashLengths = [5, 2.5]
+            set1.highlightLineDashLengths = [5, 2.5]
+            set1.setCircleColor(.clear)
+        }
+        set1.lineWidth = 2
+        set1.circleRadius = 3
+        set1.drawCircleHoleEnabled = false
+        set1.valueFont = .systemFont(ofSize: 7)
+        set1.formLineDashLengths = [5, 2.5]
+        set1.formLineWidth = 1
+        set1.formSize = 10
+        set1.drawValuesEnabled = false
+        return set1
+    }
+    
+}
+
+extension BidirectionalCollection where Element: BinaryInteger, Index == Int {
+    var consecutivelyGrouped: [[Element]] {
+        return reduce(into: []) {
+            $0.last?.last?.advanced(by: 1) == $1 ?
+                $0[index(before: $0.endIndex)].append($1) :
+                $0.append([$1])
+        }
+    }
+}
+extension Date {
+    func toMillis() -> Int64! {
+        return Int64(self.timeIntervalSince1970 * 1000)
+    }
+}
+
+
+
+extension ChartViewController: UITableViewDataSource, UITableViewDelegate, DeviceSelectedDelegate, CurrentLogIndexDelegate{
+    
+    func getBluetoothCurrentIndexLogData() {
+        self.reloadDataCurrentIndexLogData()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 0.1
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0.1
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return  1
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        
+            let deivceNameCell:LuftDeviceTableViewCell = tableView.dequeueReusableCell(withIdentifier: cellIdentity.luftDeviceTableViewCell, for: indexPath) as! LuftDeviceTableViewCell
+            if self.arrReadDeviceData.count > 0 {
+                deivceNameCell.reloadCollectionView(arrDevice: self.arrReadDeviceData)
+            }
+            deivceNameCell.deviceSelectedDelgate = self
+            return deivceNameCell
+        
+//        return UITableViewCell()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        
+        
+            let arrayCount:Float = Float(self.arrReadDeviceData.count)
+            if isGridList {
+                return CGFloat(arrayCount * 60)
+            }else {
+                let f: Float = Float(arrayCount / 3)
+                let ivalue = Int(f.rounded(.up))
+                return CGFloat((ivalue  * 115))
+            }
+    }
+    
+    func deviceSelectedDevice(deviceID:Int) {
+        //self.isSelectedDeviceRow = selectedRow + 1
+        self.arrReadDeviceData.removeAll()
+        self.arrReadDeviceData = RealmDataManager.shared.readDeviceListDataValues()
+        if self.arrReadDeviceData.count > 0 {
+            self.isSelectedDeviceRow = self.arrReadDeviceData.firstIndex(where: { (item) -> Bool in
+                item.device_id == deviceID
+            }) ?? 0
+            self.isCurrentSlectedDevice = self.arrReadDeviceData[self.isSelectedDeviceRow]
+            self.arrReadDeviceData.remove(at: self.isSelectedDeviceRow)
+            self.lblSelectedConnectDevice?.text = self.isCurrentSlectedDevice?.name
+            self.luftSelectedDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+            self.selectedDeviceID = String.init(format: "%d", self.luftSelectedDeviceID)
+            GlobalDeviceID = self.luftSelectedDeviceID
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                
+                self.initialButtonsetups()
+                self.buttonDataTypeReset()
+                
+                self.btnHoursDayYearReset()
+                self.btnFilterTypeEnabled(btn: self.btn24Hrs)
+                
+                self.btnHourDaysYearButtonsTapped(sender: self.btn24Hrs)
+                self.btnDataTypeTapped(sender: self.btnRadon)
+                
+            }
+        }
+        self.tblDeviceCollection?.reloadData()
+    }
+    
+    func getDeviceList()  {
+        self.arrReadDeviceData.removeAll()
+        self.arrReadDeviceData = RealmDataManager.shared.readDeviceListDataValues()
+        if self.arrReadDeviceData.count > 0 {
+            self.isCurrentSlectedDevice = self.arrReadDeviceData[isSelectedDeviceRow]
+            self.arrReadDeviceData.remove(at: isSelectedDeviceRow)
+            self.lblSelectedConnectDevice?.text = self.isCurrentSlectedDevice?.name
+            self.luftSelectedDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+            self.selectedDeviceID = String.init(format: "%d", self.luftSelectedDeviceID)
+            GlobalDeviceID = self.luftSelectedDeviceID
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                
+                self.initialButtonsetups()
+                self.buttonDataTypeReset()
+                
+                self.btnHoursDayYearReset()
+                self.btnFilterTypeEnabled(btn: self.btn24Hrs)
+                
+                self.btnHourDaysYearButtonsTapped(sender: self.btn24Hrs)
+                self.btnDataTypeTapped(sender: self.btnRadon)
+                
+            }
+            self.tblDeviceCollection?.reloadData()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                let arrayCount:Float = Float(self.arrReadDeviceData.count)
+                if self.isGridList {
+                    self.deviceListTableViewHeightConstraint.constant = CGFloat(arrayCount * 60)
+                    
+                }else {
+                    let f: Float = Float(arrayCount / 3)
+                    let ivalue = Int(f.rounded(.up))
+                    self.deviceListTableViewHeightConstraint.constant = CGFloat((ivalue  * 115))
+                }
+            }
+            
+            
+        }else  {
+            self.moveToAddDevice()
+        }
+    }
+    
+    func moveToAddDevice()  {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "AddDeviceViewController") as! AddDeviceViewController
+        vc.connectedBleDeviceDelegate = self
+        vc.addDeviceDataDelegateStatus = self
+        self.navigationController?.pushViewController(vc, animated: false)
+    }
+    
+    
+    @IBAction func syncButtonAction(sender: UIButton) {
+        
+        if self.isCurrentSlectedDevice?.wifi_status == true {
+            let indexPath = IndexPath(row: 1, section: 0)
+//            let statusCell: DeviceStatusTableViewCell = self.tblDeviceCollection.cellForRow(at: indexPath) as! DeviceStatusTableViewCell
+//            statusCell.lblDeviceConnectStatus.text = "Wi-Fi sync In-progress"
+            AppSession.shared.setCurrentDeviceToken(self.isCurrentSlectedDevice?.device_token ?? "")
+            SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getCurrentDeviceTokenDetails()
+            DeviceAPI.apiDeviceGetLatestReadingGet  { (deviceData, error) in
+                self.hideActivityIndicator(self.view)
+                if deviceData != nil {
+                    if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.checkSocketStatus()
+                        appDelegate.checkMessageReceivedTime()
+                        self.callSyncWifiBackGroundModeDeviceDetails()
+                    }
+                    Helper().showSnackBarAlert(message:"Latest reading request Successfully", type: .Success)
+                }else {
+                    Helper().showSnackBarAlert(message: "Something went wrong while retrieving information. Please try again later.", type: .Failure)
+                }
+            }
+        }else {
+            self.readCurrentDeviceBleData()
+        }
+    }
+    
+    func reloadDataCurrentIndexLogData() {
+        BluetoothManager.shared.centralManager = nil
+        self.hideActivityIndicator(self.view)
+        self.tblDeviceCollection?.reloadData()
+        self.tblDeviceCollection?.scrollToRow(at: IndexPath.init(row: 0, section: 0), at: .top, animated: true)
+    }
+    
+    func readCurrentDeviceBleData()  {
+        let indexPath = IndexPath(row: 1, section: 0)
+//        let statusCell: DeviceStatusTableViewCell = self.tblDeviceCollection.cellForRow(at: indexPath) as! DeviceStatusTableViewCell
+//        statusCell.lblDeviceConnectStatus.text = "Bluetoothnewgood sync In-progress"
+        if RealmDataManager.shared.readLogFirstIndexPollutantDataValues(device_ID: self.isCurrentSlectedDevice?.device_id ?? 0).count == 0 {
+            RealmDataManager.shared.insertRealmPollutantValuesTBLValues(strDate: Date(), deviceID: self.isCurrentSlectedDevice?.device_id ?? 0, co2: 0.0, air_pressure:  0.0, temperature:  0.0, humidity: 0.0, voc:  0.0, radon:  0.0, isWiFi: false, serialID: self.isCurrentSlectedDevice?.name ?? "",logIndex:-1,timeStamp:0)
+            
+        }
+<<<<<<< HEAD
+        BackgroundBLEManager.shared.strDeviceSerialID = self.isDeviceSelected?.serial_id ?? ""
+        BackgroundBLEManager.shared.strDeviceID = self.isDeviceSelected?.device_id ?? 0
+        BackgroundBLEManager.shared.deviceLogIndexStatusDelgate = self
+        BackgroundBLEManager.shared.connectBlueTooth(blueToothName: self.isDeviceSelected?.serial_id ?? "", bleFeature: .BlueToothFeatureLogCurrentIndexWrite)
+=======
+        BluetoothManager.shared.strDeviceSerialID = self.isCurrentSlectedDevice?.serial_id ?? ""
+        BluetoothManager.shared.didUpdate = 0
+        BluetoothManager.shared.strDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+        BluetoothManager.shared.deviceLogIndexStatusDelgate = self
+        BluetoothManager.shared.connectBlueTooth(blueToothName: self.isCurrentSlectedDevice?.serial_id ?? "", bleFeature: .BlueToothFeatureLogCurrentGetValue)
+>>>>>>> 8453b6d6e09449fdd1bf28aa1e8e95ddd871c553
+        
+    }
+}
+
+// MARK: - Device Data
+extension ChartViewController:DeviceMEAPIDelegate {
+    
+    func callSyncWifiBackGroundModeDeviceDetails(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            BackgroundDataAPIManager.shared.callSyncBackGroundDeviceDetailsAPI()
+            BackgroundDataAPIManager.shared.allReadingData = self
+            DispatchQueue.global(qos: .background).async {
+                DispatchQueue.main.async {
+                }
+            }
+        }
+    }
+    
+    func deviceDataAPIStatus(update:Bool) {
+        self.hideActivityIndicator(self.view)
+        self.getDeviceList()
+    }
+}
+
+extension ChartViewController: ConnectPeripheralDelegate,AddNewDeviceDataDelegate {
+    
+    func connectedPeripheralDevice(peripheralDevice: CBPeripheral) {
+        self.strConnectPeripheral = peripheralDevice.name ?? ""
+        self.mainPeripheral = peripheralDevice
+    }
+    
+    func addNewdeviceDataDelegateDelegateStatus(upadte: Bool) {
+        self.isLoadMe = true
+    }
+    
+    
+}
+
+extension ChartViewController: AllReadingDelegate {
+    
+    func getallBackGroundWifiReadingStatus(update:Bool){
+        self.hideActivityIndicator(self.view)
+        self.reloadDataCurrentIndexLogData()
+    }
+    
+}
+
+extension ChartViewController: LTSideMenuDelegate{
+    @IBAction func btnPresentMenuTapped(_ sender: Any) {
+        let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewControllerMenu = mainStoryboard.instantiateViewController(withIdentifier: "MenuViewController") as! MenuViewController
+        viewControllerMenu.menuDelegate = self
+        viewControllerMenu.isSelectedDevice = self.isCurrentSlectedDevice
+        viewControllerMenu.modalPresentationStyle = .overFullScreen
+        self.isMenuPressed = 1
+        self.tabBarController?.present(viewControllerMenu, animated: true, completion: nil)
+    }
+    
+    func selectedMenuID(sideMenuType: SideMenuType) {
+        self.isMenuPressed = 0
+        switch sideMenuType{
+        case SideMenuType.SideMenuRename:
+            self.showMenuRenameDevice()
+            break
+        case SideMenuType.SideMenuNotification:
+            self.showToNotificationDashBoard()
+            break
+        case SideMenuType.SideMenuFrimware:
+            self.showToFirmWare()
+            break
+        case SideMenuType.SideMenuRemoveDevice:
+            self.showToRemoveDevice()
+            break
+        case SideMenuType.SideMenuConnectToWifi:
+            self.showToConnecetToWiFi()
+            break
+        case SideMenuType.SideMenuRemoveToWifi:
+            self.showToRemoveWifi()
+            break
+        case SideMenuType.SideMenuShareData:
+            if self.isCurrentSlectedDevice?.shared_user_email == ""{
+                self.showToShareDataAlert()
+            }else {
+                self.moveToShareEMailView()
+            }
+            break
+        case SideMenuType.SideMenuTempOffset:
+            self.showToTempoffset()
+            break
+        default:
+            break
+        }
+        
+    }
+    
+    func moveToShareEMailView()  {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vcShareDataEmail = storyboard.instantiateViewController(withIdentifier: "ShareDataEmailViewController") as! ShareDataEmailViewController
+        vcShareDataEmail.currentDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+        vcShareDataEmail.currentEmailID = self.isCurrentSlectedDevice?.shared_user_email ?? ""
+        self.navigationController?.pushViewController(vcShareDataEmail, animated: false)
+    }
+    
+    
+    func showMenuRenameDevice()  {
+        let titleString = NSAttributedString(string: "Rename your Device", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let message = String(format: "Enter a new new name for the device %@", self.isCurrentSlectedDevice?.name ?? "")
+        let messageString = NSAttributedString(string: message, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 15), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let alert = UIAlertController(title: "", message: "", preferredStyle: .alert)
+        alert.setValue(titleString, forKey: "attributedTitle")
+        alert.addTextField { (textField : UITextField!) -> Void in
+            textField.placeholder = "Device Name"
+        }
+        alert.setValue(messageString, forKey: "attributedMessage")
+        let ok = UIAlertAction(title: "Save", style: .default, handler: { action in
+            if let firstTextField:UITextField = alert.textFields![0] as UITextField {
+                let deviceName = self.removeWhiteSpace(text: firstTextField.text ?? "")
+                self.strRenameDevice = deviceName
+                self.renameDeviceAPI()
+            }
+        })
+        alert.addAction(ok)
+        let cancel = UIAlertAction(title: "Cancel", style: .default, handler: { action in
+            
+        })
+        alert.addAction(cancel)
+        alert.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        DispatchQueue.main.async(execute: {
+            self.present(alert, animated: true)
+        })
+    }
+    
+    func renameDeviceAPI() {
+        self.showActivityIndicator(self.view)
+        if self.strRenameDevice.count != 0 {
+            if Reachability.isConnectedToNetwork() == true {
+                SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getDefaultHeaderDetails()
+                AppUserAPI.apiAppUserRenamePost(model: RenameDeviceViewModel.init(name:self.strRenameDevice, deviceId: Int64(self.isCurrentSlectedDevice?.device_id ?? 0)), completion: {(error) in
+                    self.hideActivityIndicator(self.view)
+                    if error == nil {
+                        Helper().showSnackBarAlert(message: "Rename device sucessfully", type: .Success)
+                        self.callMyDeviceAPI()
+                    }else {
+                        Helper().showSnackBarAlert(message: "Rename device Failure", type: .Failure)
+                    }
+                })
+            }else {
+                Helper.shared.showSnackBarAlert(message: NETWORK_CONNECTION, type: .Failure)
+            }
+        }else {
+            Helper.shared.showSnackBarAlert(message: "Invalid device name", type: .Failure)
+        }
+    }
+    
+    func showToFirmWare() {
+        let titleString = NSAttributedString(string: "Update", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let messageString = NSAttributedString(string: "No new firmware has been found,please check again later.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 15), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let alert = UIAlertController(title: "", message: "", preferredStyle: .alert)
+        alert.setValue(titleString, forKey: "attributedTitle")
+        alert.setValue(messageString, forKey: "attributedMessage")
+        let cancel = UIAlertAction(title: "Ok", style: .default, handler: { action in
+            
+        })
+        alert.addAction(cancel)
+        alert.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        DispatchQueue.main.async(execute: {
+            self.present(alert, animated: true)
+        })
+    }
+    
+    func showToRemoveDevice() {
+        let titleString = NSAttributedString(string: "Remove Device", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let msg = String(format:"Are you sure you would like to remove this device - %@",self.isCurrentSlectedDevice?.name ?? "")
+        let messageString = NSAttributedString(string: msg, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 15), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let alert = UIAlertController(title: "", message: "", preferredStyle: .alert)
+        alert.setValue(titleString, forKey: "attributedTitle")
+        alert.setValue(messageString, forKey: "attributedMessage")
+        let ok = UIAlertAction(title: "Yes", style: .default, handler: { action in
+            self.removeDeviceAPI()
+        })
+        alert.addAction(ok)
+        let cancel = UIAlertAction(title: "No", style: .default, handler: { action in
+            
+        })
+        alert.addAction(cancel)
+        alert.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        DispatchQueue.main.async(execute: {
+            self.present(alert, animated: true)
+        })
+    }
+    
+    func removeDeviceAPI()  {
+        self.showActivityIndicator(self.view)
+        SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getDefaultHeaderDetails()
+        AppUserAPI.apiAppUserRemoveDelete(deviceId: Int64(self.isCurrentSlectedDevice?.device_id ?? 0), completion:  { (error) in
+            self.hideActivityIndicator(self.view)
+            if error == nil {
+                Helper.shared.showSnackBarAlert(message: "Device removed Succesfully", type: .Success)
+                self.callMyDeviceAPI()
+            }else {
+                Helper.shared.showSnackBarAlert(message: "Device removed faliure", type: .Failure)
+            }
+        })
+    }
+    
+    func callMyDeviceAPI()  {
+        self.showActivityIndicator(self.view)
+        
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(self,
+                                       selector: #selector(ChartViewController.deviceupdated),
+                                       name: .postNotifiDeviceUpadte,
+                                       object: nil)
+        
+        UIApplication.shared.beginIgnoringInteractionEvents()
+        
+        APIManager.shared.myDeviceDelegate = self
+        APIManager.shared.callDeviceDetailsTypeApi(isUpdateDummy: true)
+    }
+    
+    @objc func deviceupdated(){
+        
+        UIApplication.shared.endIgnoringInteractionEvents()
+        self.hideActivityIndicator(self.view)
+        self.getDeviceList()
+    }
+    
+    func showToNotificationDashBoard() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vcLTDashBoard = storyboard.instantiateViewController(withIdentifier: "LTDashBoardNotificationViewController") as! LTDashBoardNotificationViewController
+        vcLTDashBoard.isSelectDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+        self.navigationController?.pushViewController(vcLTDashBoard, animated: true)
+    }
+    
+    func showToConnecetToWiFi() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vcMYDeviceData = storyboard.instantiateViewController(withIdentifier: "AvilableNetworkViewController") as! AvilableNetworkViewController
+        vcMYDeviceData.avilableDeviceID = self.isCurrentSlectedDevice?.device_id ?? 0
+        vcMYDeviceData.serialDeviceName = self.isCurrentSlectedDevice?.name ?? ""
+        self.navigationController?.pushViewController(vcMYDeviceData, animated: false)
+        
+        /*Future New Good
+         vcMYDeviceData.editedDeviceName = self.txtDeviceName?.text ?? ""
+         vcMYDeviceData.connectSSIDPeripheral = connectPeripheral
+         vcMYDeviceData.avilableDeviceID = self.defaultDeviceID
+         vcMYDeviceData.avilableAddDelegate = self*/
+    }
+    
+    func showToTempoffset() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vcTempOffset = storyboard.instantiateViewController(withIdentifier: "TempOffsetViewController") as! TempOffsetViewController
+        vcTempOffset.isDeviceSelected = self.isCurrentSlectedDevice
+        self.navigationController?.pushViewController(vcTempOffset, animated: false)
+    }
+    
+    func showToShareDataAlert() {
+        let titleString = NSAttributedString(string: "Share Data", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let message = String(format: "Enter the email address of the professional tester you would like to share data with.")
+        let messageString = NSAttributedString(string: message, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 15), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let alert = UIAlertController(title: "", message: "", preferredStyle: .alert)
+        alert.setValue(titleString, forKey: "attributedTitle")
+        alert.addTextField { (textField : UITextField!) -> Void in
+            textField.placeholder = "Email Address"
+            
+        }
+        alert.setValue(messageString, forKey: "attributedMessage")
+        let ok = UIAlertAction(title: "Add", style: .default, handler: { action in
+            if let firstTextField:UITextField = alert.textFields![0] as UITextField {
+                self.strShareEmailID = self.removeWhiteSpace(text: firstTextField.text ?? "")
+                let password = self.removeWhiteSpace(text:"Augusta@123")
+                let isValidated = self.validate(emailId: self.strShareEmailID, password: password)
+                if isValidated.0 == true  {
+                    self.callShareEmailIDapi()
+                }else {
+                    Helper.shared.showSnackBarAlert(message: isValidated.1, type: .Failure)
+                }
+            }
+        })
+        alert.addAction(ok)
+        let cancel = UIAlertAction(title: "Cancel", style: .default, handler: { action in
+            
+        })
+        alert.addAction(cancel)
+        alert.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        DispatchQueue.main.async(execute: {
+            self.present(alert, animated: true)
+        })
+    }
+    
+    func validate(emailId: String, password: String) -> (Bool, String) {
+        var isValidationSuccess = true
+        var message:String = ""
+        if emailId.count == 0{
+            message = CONTENT_EMPTY_USERNAME
+            isValidationSuccess = false
+        } else if Helper.shared.isValidEmailAddress(strValue: emailId) == false {
+            message = CONTENT_INVALID_EMAIL
+            isValidationSuccess = false
+        } else if password.count == 0{
+            message = CONTENT_EMPTY_PASSWPRD
+            isValidationSuccess = false
+        }
+        else if Helper.shared.isValidPassword(strValue: password) == false {
+            message = CONTENT_CHAR_PASSWORD
+            isValidationSuccess = false
+        }
+        else if Helper.shared.isCharValidPassword(password: password) == false {
+            message = CONTENT_CHAR_PASSWORD
+            isValidationSuccess = false
+        }
+        return (isValidationSuccess, message)
+    }
+    
+    func callShareEmailIDapi(){
+        self.showActivityIndicator(self.view)
+        if Reachability.isConnectedToNetwork() == true {
+            AppSession.shared.setCurrentDeviceToken(self.isCurrentSlectedDevice?.device_token ?? "")
+            SwaggerClientAPI.customHeaders = HttpManager.sharedInstance.getDefaultHeaderDetails()
+            DeviceAPI.apiDeviceSharedHomeDevicePost(email: self.strShareEmailID, deviceId: Int64(self.isCurrentSlectedDevice?.device_id ?? 0)) { (responses, error) in
+                self.hideActivityIndicator(self.view)
+                if error == nil {
+                    self.navigationController?.popToRootViewController(animated: true)
+                }else {
+                    Helper().showSnackBarAlert(message: "Share EMail Update Faliure", type: .Failure)
+                }
+            }
+        }else {
+            Helper.shared.showSnackBarAlert(message: NETWORK_CONNECTION, type: .Failure)
+        }
+    }
+    
+    func removeWifiNameToDevice() {
+        self.showActivityIndicator(self.view)
+        Helper.shared.showSnackBarAlert(message: "Bluetooth Write Process Started", type: .Success)
+        BluetoothManager.shared.strDeviceToken = ""
+        BluetoothManager.shared.selectedWifiName = ""
+        BluetoothManager.shared.selectedWifiPassword = ""
+        BluetoothManager.shared.selectedWifiPassword = ""
+        BluetoothManager.shared.selectedWifiPassword = ""
+        BluetoothManager.shared.selectedWifiPassword = ""
+        BluetoothManager.shared.connectBlueTooth(blueToothName: self.isCurrentSlectedDevice?.serial_id ?? "", bleFeature: .BlueToothFeatureSSIDWrite)
+        BluetoothManager.shared.deviceWriteStatusDelgate = self
+    }
+    
+    func showToRemoveWifi() {
+        let titleString = NSAttributedString(string: "Remove Wifi", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let messageString = NSAttributedString(string: "Are you sure you Remove wifi.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 15), NSAttributedString.Key.foregroundColor : ThemeManager.currentTheme().ltCellTitleColor])
+        let alert = UIAlertController(title: "", message: "", preferredStyle: .alert)
+        alert.setValue(titleString, forKey: "attributedTitle")
+        alert.setValue(messageString, forKey: "attributedMessage")
+        let ok = UIAlertAction(title: "Yes", style: .default, handler: { action in
+            self.removeWifiNameToDevice()
+        })
+        alert.addAction(ok)
+        let cancel = UIAlertAction(title: "No", style: .default, handler: { action in
+            
+        })
+        alert.addAction(cancel)
+        alert.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = ThemeManager.currentTheme().viewBackgroundColor
+        DispatchQueue.main.async(execute: {
+            self.present(alert, animated: true)
+        })
+    }
+}
+
+
+extension ChartViewController: SSIDWriteDelegate{
+    func writeSSIDSocketURL() {
+        Helper.shared.showSnackBarAlert(message: "Write Inprogress", type: .InfoOrNotes)
+        self.writeRemoveWifiIndex = self.writeRemoveWifiIndex + 1
+        if self.writeRemoveWifiIndex == 5 {
+            self.reMoveWifiStatus()
+        }
+    }
+    
+    func writeSSIDCloudWebURL() {
+        Helper.shared.showSnackBarAlert(message: "Wi-Fi Connection Inprogress", type: .InfoOrNotes)
+        self.writeRemoveWifiIndex = self.writeRemoveWifiIndex + 1
+        if self.writeRemoveWifiIndex == 5 {
+            self.reMoveWifiStatus()
+        }
+    }
+    
+    func writeSSIDSocketAuthToken() {
+        Helper.shared.showSnackBarAlert(message: "Wi-Fi Connection Inprogress", type: .InfoOrNotes)
+        self.writeRemoveWifiIndex = self.writeRemoveWifiIndex + 1
+        if self.writeRemoveWifiIndex == 5 {
+            self.reMoveWifiStatus()
+        }
+    }
+    
+    func writeSSIDName() {
+        Helper.shared.showSnackBarAlert(message: "Wi-Fi Connection Inprogress", type: .InfoOrNotes)
+        self.writeRemoveWifiIndex = self.writeRemoveWifiIndex + 1
+        if self.writeRemoveWifiIndex == 2 {
+            self.reMoveWifiStatus()
+        }
+    }
+    func writeSSIDPassword(){
+        Helper.shared.showSnackBarAlert(message: "Wi-Fi Connection Inprogress", type: .InfoOrNotes)
+        self.writeRemoveWifiIndex = self.writeRemoveWifiIndex + 1
+        if self.writeRemoveWifiIndex == 2 {
+            self.reMoveWifiStatus()
+        }
+    }
+    
+    func reMoveWifiStatus()  {
+        Helper.shared.showSnackBarAlert(message: "Please wait Wi-Fi connection status checking", type: .Success)
+        self.hideActivityIndicator(self.view)
+    }
+}

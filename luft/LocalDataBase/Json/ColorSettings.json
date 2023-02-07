@@ -1,0 +1,28 @@
+{
+"ColorSettings": [
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#32C772", "Enabled": "1", "Device_ID": 368, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#DEBF54", "Enabled": "1", "Device_ID": 368, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 368, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#3E82F7", "Enabled": "1", "Device_ID": 368, "startTime": 1700, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#32C772", "Enabled": "1", "Device_ID": 369, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#DEBF54", "Enabled": "1", "Device_ID": 369, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 369, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#3E82F7", "Enabled": "1", "Device_ID": 369, "startTime": 1700, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#32C772", "Enabled": "1", "Device_ID": 370, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#DEBF54", "Enabled": "1", "Device_ID": 370, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 370, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#3E82F7", "Enabled": "1", "Device_ID": 370, "startTime": 2000, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#32C772", "Enabled": "1", "Device_ID": 582, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#DEBF54", "Enabled": "1", "Device_ID": 582, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 582, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#3E82F7", "Enabled": "1", "Device_ID": 582, "startTime": 1700, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#3E82F7", "Enabled": "1", "Device_ID": 659, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#800080", "Enabled": "1", "Device_ID": 659, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 659, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#FFA500", "Enabled": "1", "Device_ID": 659, "startTime": 2300, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "OK", "Color": "#32C772", "Enabled": "1", "Device_ID": 658, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Warning", "Color": "#DEBF54", "Enabled": "1", "Device_ID": 658, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Alert", "Color": "#E15D5B", "Enabled": "1", "Device_ID": 658, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null },
+{ "type": "Feature", "properties": { "Tag": "Nightlight", "Color": "#FFC0CB", "Enabled": "1", "Device_ID": 658, "startTime": 2200, "endTime": 600, "sync": 0 }, "geometry": null }
+]
+}

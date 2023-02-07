@@ -1,0 +1,9 @@
+{
+"DeviceDetails": [
+{ "type": "Feature", "properties": { "Device_ID": 368, "Name": "Old_Open_9E5A", "SerialNumber": "AirCHECK_9E5A", "User_ID": "naveen4@yopmail.com", "IsShared": 0, "wifistatus": 1, "Professionalemail": "radondemo@gmail.com" }, "geometry": null },
+{ "type": "Feature", "properties": { "Device_ID": 369, "Name": "Old_Open_9EB2", "SerialNumber": "AirCHECK_9EB2", "User_ID": "naveen4@yopmail.com", "IsShared": 0, "wifistatus": 1, "Professionalemail": "radondemo@gmail.com" }, "geometry": null },
+{ "type": "Feature", "properties": { "Device_ID": 370, "Name": "Home_9E8E", "SerialNumber": "AirCHECK_9E8E", "User_ID": "naveen4@yopmail.com", "IsShared": 0, "wifistatus": 1, "Professionalemail": "radondemo@gmail.com" }, "geometry": null },
+{ "type": "Feature", "properties": { "Device_ID": 582, "Name": "Office_Wall_F53E", "SerialNumber": "AirCHECK_F53E", "User_ID": "naveen4@yopmail.com", "IsShared": 0, "wifistatus": 1, "Professionalemail": "radondemo@gmail.com" }, "geometry": null },
+{ "type": "Feature", "properties": { "Device_ID": 658, "Name": "Luft_36C2", "SerialNumber": "Luft_36C2", "User_ID": "naveen4@yopmail.com", "IsShared": 0, "wifistatus": 1, "Professionalemail": "" }, "geometry": null }
+]
+}

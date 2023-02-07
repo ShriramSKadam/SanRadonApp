@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19G73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="AirPressureINHG" representedClassName="AirPressureINHG" syncable="YES" codeGenerationType="class">
+        <attribute name="airpreinhgvalue" optional="YES" attributeType="String"/>
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="AirPressureKpa" representedClassName="AirPressureKpa" syncable="YES" codeGenerationType="class">
+        <attribute name="airprekpavalue" optional="YES" attributeType="String"/>
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="BuilldingType" representedClassName="BuilldingType" syncable="YES" codeGenerationType="class">
+        <attribute name="createdBy" optional="YES" attributeType="String"/>
+        <attribute name="datecreated" optional="YES" attributeType="String"/>
+        <attribute name="datemodified" optional="YES" attributeType="String"/>
+        <attribute name="descriptionValue" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="updatedBy" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Colors" representedClassName="Colors" syncable="YES" codeGenerationType="class">
+        <attribute name="colorcode" optional="YES" attributeType="String"/>
+        <attribute name="colorname" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ConnectDevice" representedClassName="ConnectDevice" syncable="YES" codeGenerationType="class">
+        <attribute name="devicename" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="DeviceData" representedClassName="DeviceData" syncable="YES" codeGenerationType="class">
+        <attribute name="airpressure" optional="YES" attributeType="String"/>
+        <attribute name="devicename" optional="YES" attributeType="String"/>
+        <attribute name="eco2" optional="YES" attributeType="String"/>
+        <attribute name="humidity" optional="YES" attributeType="String"/>
+        <attribute name="lastsynctime" optional="YES" attributeType="String"/>
+        <attribute name="radon" optional="YES" attributeType="String"/>
+        <attribute name="temperature" optional="YES" attributeType="String"/>
+        <attribute name="voc" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="DeviceDataSync" representedClassName="DeviceDataSync" syncable="YES" codeGenerationType="class">
+        <attribute name="serialId" optional="YES" attributeType="String"/>
+        <attribute name="syncdata" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Eco2value" representedClassName="Eco2value" syncable="YES" codeGenerationType="class">
+        <attribute name="alert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="eco2" optional="YES" attributeType="String"/>
+        <attribute name="warning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Humidity" representedClassName="Humidity" syncable="YES" codeGenerationType="class">
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="humidityvalue" optional="YES" attributeType="String"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Mbar" representedClassName="Mbar" syncable="YES" codeGenerationType="class">
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="idValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="mbarvalue" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="MitigationType" representedClassName="MitigationType" syncable="YES" codeGenerationType="class">
+        <attribute name="createdBy" optional="YES" attributeType="String"/>
+        <attribute name="datecreated" optional="YES" attributeType="String"/>
+        <attribute name="datemodified" optional="YES" attributeType="String"/>
+        <attribute name="descriptionValue" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="updatedBy" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="RadonBqm3" representedClassName="RadonBqm3" syncable="YES" codeGenerationType="class">
+        <attribute name="alert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="bqm3" optional="YES" attributeType="String"/>
+        <attribute name="warning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="RadonPCII" representedClassName="RadonPCII" syncable="YES" codeGenerationType="class">
+        <attribute name="alert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="pcii" optional="YES" attributeType="String"/>
+        <attribute name="warning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="TemperatureCelsius" representedClassName="TemperatureCelsius" syncable="YES" codeGenerationType="class">
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="temperaturecelsiusvalue" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="TemperatureFahrenheit" representedClassName="TemperatureFahrenheit" syncable="YES" codeGenerationType="class">
+        <attribute name="highalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="highwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowalert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowwarning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="tempfahrenheitvalue" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Voc" representedClassName="Voc" syncable="YES" codeGenerationType="class">
+        <attribute name="alert" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="vocvalue" optional="YES" attributeType="String"/>
+        <attribute name="warning" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+    </entity>
+    <elements>
+        <element name="AirPressureINHG" positionX="63" positionY="180" width="128" height="120"/>
+        <element name="AirPressureKpa" positionX="81" positionY="198" width="128" height="120"/>
+        <element name="BuilldingType" positionX="0" positionY="108" width="128" height="150"/>
+        <element name="Colors" positionX="99" positionY="216" width="128" height="75"/>
+        <element name="ConnectDevice" positionX="0" positionY="108" width="128" height="60"/>
+        <element name="DeviceData" positionX="0" positionY="45" width="128" height="165"/>
+        <element name="Eco2value" positionX="36" positionY="153" width="128" height="90"/>
+        <element name="Humidity" positionX="27" positionY="135" width="128" height="120"/>
+        <element name="Mbar" positionX="54" positionY="162" width="128" height="135"/>
+        <element name="MitigationType" positionX="54" positionY="162" width="128" height="150"/>
+        <element name="RadonBqm3" positionX="0" positionY="126" width="128" height="90"/>
+        <element name="RadonPCII" positionX="18" positionY="144" width="128" height="90"/>
+        <element name="TemperatureCelsius" positionX="36" positionY="144" width="128" height="120"/>
+        <element name="TemperatureFahrenheit" positionX="45" positionY="162" width="128" height="120"/>
+        <element name="Voc" positionX="18" positionY="126" width="128" height="90"/>
+        <element name="DeviceDataSync" positionX="54" positionY="171" width="128" height="28"/>
+    </elements>
+</model>

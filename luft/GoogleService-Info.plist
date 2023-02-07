@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>33913506360-01cep8ajpoh2g78q415c66msv1oi3oco.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.33913506360-01cep8ajpoh2g78q415c66msv1oi3oco</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>33913506360-frfkfogjdm7cin7d11gslp2vrah6at61.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBTwCklK1JQNJoIK0LTsMvwpj3Agp7m3e0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>33913506360</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.sunradon.luft</string>
+	<key>PROJECT_ID</key>
+	<string>oneradon-cloud</string>
+	<key>STORAGE_BUCKET</key>
+	<string>oneradon-cloud.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:33913506360:ios:7f871c6be76eb4f54bf4cd</string>
+	<key>DATABASE_URL</key>
+	<string>https://oneradon-cloud.firebaseio.com</string>
+</dict>
+</plist>
